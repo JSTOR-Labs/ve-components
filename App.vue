@@ -37,7 +37,7 @@
     D3PlusNetwork: [{ id: 'item-0', url: 'data/heliconia.tsv' }],
     D3PlusRingNetwork: [{ id: 'item-0', url: 'data/heliconia.tsv' }],
     // VisNetwork: [{ id: 'item-0', file: 'data/medici.tsv', layout: 'network', arrows: 'to'  }],
-    VisNetwork: [{ id: 'item-0', file: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/master/graphs/watermelon.csv', layout: 'network', arrows: 'to'  }],
+    VisNetwork: [{ id: 'item-0', file: 'data/heliconia.tsv', layout: 'network', arrows: 'to'  }],
     StoriiiesViewer: [{ id: '3f1du' }],
     VideoPlayer: [{ id: 'EvUK6ANy5II' }],
     LeafletMap: [{ 
