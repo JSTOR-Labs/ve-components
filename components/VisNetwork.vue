@@ -1,5 +1,6 @@
 <template>
   <div id="vis" :style="containerStyle">
+    <div id="networktitle">{{this.items[0].title}}</div>
     <div id="mynetwork"></div>
   </div>
 </template>
@@ -68,8 +69,7 @@ module.exports = {
       //get input data here from file
       this.getInput(this.items[0].file)
         .then((delimitedDataString) => {
-          const delimiter =
-            this.items[0].file.split(".").pop() == "tsv" ? "\t" : ",";
+          const delimiter =this.items[0].file.split(".").pop() == "tsv" ? "\t" : ",";
           const data = this.transformData(
             this.delimitedStringToObjArray(delimitedDataString, delimiter)
           );
@@ -78,7 +78,6 @@ module.exports = {
         })
         .then((result) => this.getImages(nodeslist)) // eslint-disable-line no-unused-vars
         .then((result) => {
-          console.log("result", result);
           this.renderGraph(nodeslist, edgeslist);
         });
     },
@@ -95,6 +94,9 @@ module.exports = {
 
       let options = {
         interaction: { hover: true },
+        physics:{
+           stabilization: false,
+       },
         layout: {
           randomSeed: undefined,
           improvedLayout: true,
@@ -102,7 +104,7 @@ module.exports = {
           hierarchical: this.items[0].layout === "hierarchy" ? true : false,
         },
         edges: {
-          arrows: this.items[0].arrows || 'to',
+          arrows: this.items[0].arrows,
           //color: 'red',
           scaling: {
             label: true,
@@ -128,7 +130,6 @@ module.exports = {
       this.$emit("hover-id", itemID);
     },
     setSelectedItemID(itemID) {
-      console.log("in setSelectedItemID", itemID);
       this.$emit("selected-id", itemID);
     },
     addEventHandlers(elem, itemId) {
@@ -166,10 +167,16 @@ module.exports = {
           if (nodes[nodeId] === undefined) {
             let id = `${transformed.nodes.length}`;
             let qid =
-              obj[nodeType].id[0] === "Q" ? `wd:${obj[nodeType].id}` : undefined;
+              obj[nodeType].id[0] === "Q" ? obj[nodeType].id : undefined;
             let label = obj[nodeType].label || obj[nodeType].id;
+            let x = obj[nodeType].x ? (this.width)*(obj[nodeType].x/100) : undefined;
+            let y = obj[nodeType].y ? (this.height)*(obj[nodeType].y/100) : undefined;
+            let physics = obj[nodeType].x && obj[nodeType].y ? false : true;
+            let image = obj[nodeType].image ? obj[nodeType].image : undefined;
+            let shape = obj[nodeType].image ? "circularImage" : undefined;
+            //let fixed = true
             nodes[nodeId] = id;
-            transformed.nodes.push({ id, qid, label, title: label });
+            transformed.nodes.push({ id, qid, label, title: label, x, y, physics, image, shape});
           }
         });
       });
@@ -238,22 +245,36 @@ module.exports = {
         });
       }
     },
+    addPositions(){
+
+    }
   },
 };
 </script>
 
 <style>
-.vis-network {
-  overflow: visible;
-}
-body {
-  color: #d3d3d3;
-  font: 12pt arial;
-  background-color: #222222;
-}
-#vis,
-#mynetwork {
-  width: 100%;
-  height: 100%;
-}
+  .vis-network {
+    overflow: visible;
+  }
+  body {
+    color: #d3d3d3;
+    font: 12pt arial;
+    background-color: #222222;
+  }
+  #vis,
+  #mynetwork {
+    width: 100%;
+    height: 100%;
+  }
+  #networktitle {
+    z-index:100;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    font: 16pt arial;
+    background-color:rgba(143, 223, 255, 0.5);
+    padding: 2%;
+    color: black;
+    text-align: center;
+  }
 </style>
