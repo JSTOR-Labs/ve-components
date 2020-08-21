@@ -35,7 +35,7 @@
     }],
     D3Network: [{ id: 'item-0', url: 'data/miserables-1.json' }],
     D3PlusNetwork: [{ id: 'item-0', url: 'data/heliconia.tsv' }],
-    D3PlusRingNetwork: [{ id: 'item-0', url: 'data/heliconia.tsv' }],
+    D3PlusRingNetwork: [{ id: 'item-0', url: 'data/medici.tsv' }],
     // VisNetwork: [{ id: 'item-0', file: 'data/medici.tsv', layout: 'network', arrows: 'to'  }],
     VisNetwork: [{ id: 'item-0', file: 'data/heliconia.tsv', layout: 'network', arrows: 'to'  }],
     StoriiiesViewer: [{ id: '3f1du' }],
