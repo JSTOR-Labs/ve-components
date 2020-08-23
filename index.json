@@ -1,0 +1,17 @@
+[
+    { "name": "siteHeader", "src": "/components/Header.vue"},
+    { "name": "siteHeader", "src": "/components/Footer.vue"},
+    { "name": "mapViewer", "src": "/components/LeafletMap.vue", "selectors": ["tag:map"], "icon": "fa-map-marker-alt", "label": "Map"},
+    { "name": "imageViewer", "src": "/components/ImageViewer/index.vue", "selectors": ["tag:image"], "icon": "fa-file-image", "label": "Images"},
+    { "name": "staticImageViewer", "src": "/components/ImageViewer/StaticImageViewer.vue"},
+    { "name": "miradorImageViewer", "src": "/components/ImageViewer/MiradorViewer.vue"},
+    { "name": "openSeadragonImageViewer", "src": "/components/ImageViewer/OpenSeadragonViewer.vue.vue"},
+    { "name": "imageViewerModal", "src": "/components/ImageViewer/ImageViewerModal.vue"},
+    { "name": "videoPlayer", "src": "/components/VideoPlayer.vue", "selectors": ["tag:video"], "icon": "fa-video", "label": "Videos"},
+    { "name": "storiiiesViewer", "src": "/components/StoriiiesViewer.vue", "selectors": ["tag:storiiies"], "icon": "fa-book", "label": "Storiiies Viewer"},
+    { "name": "plantSpecimenViewer", "src": "/components/PlantSpecimenViewer.vue", "selectors": ["tag:plant-specimen"], "icon": "fa-seedling", "label": "Plant Specimens"},
+    { "name": "visNetworkViewer", "src": "/components/VisNetworkViewer.vue", "selectors": ["tag:vis-network"], "icon": "fa-chart-network", "label": "Networks"},
+    { "name": "timeSelector", "src": "/components/TimeSelector.vue"},
+    { "name": "entityInfobox", "src": "/components/EntityInfobox.vue"},
+    { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"}
+]
