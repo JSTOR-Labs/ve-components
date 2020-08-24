@@ -10,7 +10,7 @@
     { "name": "videoPlayer", "src": "/components/VideoPlayer.vue", "selectors": ["tag:video"], "icon": "fa-video", "label": "Videos"},
     { "name": "storiiiesViewer", "src": "/components/StoriiiesViewer.vue", "selectors": ["tag:storiiies"], "icon": "fa-book", "label": "Storiiies Viewer"},
     { "name": "plantSpecimenViewer", "src": "/components/PlantSpecimenViewer.vue", "selectors": ["tag:plant-specimen"], "icon": "fa-seedling", "label": "Plant Specimens"},
-    { "name": "visNetworkViewer", "src": "/components/VisNetworkViewer.vue", "selectors": ["tag:vis-network"], "icon": "fa-chart-network", "label": "Networks"},
+    { "name": "visNetwork", "src": "/components/VisNetwork.vue", "selectors": ["tag:vis-network"], "icon": "fa-chart-network", "label": "Networks"},
     { "name": "timeSelector", "src": "/components/TimeSelector.vue"},
     { "name": "entityInfobox", "src": "/components/EntityInfobox.vue"},
     { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"}
