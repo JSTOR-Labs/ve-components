@@ -240,7 +240,6 @@ module.exports = {
       return `${Math.ceil(imageBounds.x)},${Math.ceil(imageBounds.y)},${Math.ceil(imageBounds.width)},${Math.ceil(imageBounds.height)}`
     },
     viewportChange: _.debounce(function () {
-      console.log('viewportChange')
       document.querySelector('#bottom-overlay').innerHTML = this.imageViewportCoords()
     }, 100),
     gotoAnnotation(anno) {
