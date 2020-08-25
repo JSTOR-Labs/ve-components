@@ -16,11 +16,11 @@
 /* global OpenSeadragon, _ */
 
 const dependencies = [
-    // 'https://cdn.jsdelivr.net/npm/openseadragon@2.4.2/build/openseadragon/openseadragon.min.js',
     'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
     'https://recogito.github.io/js/openseadragon-annotorious.min.js'
-    // 'https://cdn.jsdelivr.net/npm/@recogito/annotorious-openseadragon@2.0.6/dist/openseadragon-annotorious.min.js'
 ]
+
+const prefixUrl = 'https://raw.githubusercontent.com/jstor-labs/ve-components/master/public/images/'
 
 module.exports = {
   name: 'OpenSeadragonViewer',
@@ -79,15 +79,16 @@ module.exports = {
         degrees: parseInt(this.currentItem.rotate || '0'),
         // animationTime: 100,
         homeFillsViewer: this.fit === 'cover',
-        showFullPageControl: false
+        showFullPageControl: false,
+        prefixUrl: prefixUrl
       })
       this.viewer.addHandler('open', () => {
         let customButton = new OpenSeadragon.Button({
           tooltip: 'Custom',
-          srcRest: `/images/flip_rest.png`,
-          srcGroup: `/images/flip_rest.png`,
-          srcHover: `/images/flip_rest.png`,
-          srcDown: `/images/flip_rest.png`,
+          srcRest: `${prefixUrl}flip_rest.png`,
+          srcGroup: `${prefixUrl}flip_rest.png`,
+          srcHover: `${prefixUrl}flip_rest.png`,
+          srcDown: `${prefixUrl}flip_rest.png`,
           onClick: this.onCustomButtonClick
         })
         // this.viewer.addControl(customButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT })
