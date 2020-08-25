@@ -12,7 +12,7 @@
 </template>
 
 <script>
-  /* global debounce */
+  /* global _ */
   import D3Network from './components/D3Network.vue'
   import D3PlusNetwork from './components/D3PlusNetwork.vue'
   import D3PlusRingNetwork from './components/D3PlusRingNetwork.vue'
@@ -107,7 +107,7 @@
         window.addEventListener('resize', this.windowResize)
     },
     methods: {
-        windowResize: debounce(function (e) {
+        windowResize: _.debounce(function (e) {
             this.height = Math.ceil(e.target.innerHeight * 0.8) - this.$refs.menu.clientHeight
             this.width = Math.ceil(e.target.innerWidth * 0.8)
         }, 100)

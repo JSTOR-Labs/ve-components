@@ -15,7 +15,7 @@
 
 <script>
 
-/* global debounce */
+/* global _ */
 
 const dependencies = []
 
@@ -38,7 +38,7 @@ module.exports = {
         this.timeRange = this.initialTimeRange || this.timeRange
         console.log(`${this.$options.name}.mounted: timeRange=${this.timeRange}`)
     },
-    rangeChange: debounce(function (e) {
+    rangeChange: _.debounce(function (e) {
       this.$emit('range-change', e)
     }, 500),
     label(val) {
