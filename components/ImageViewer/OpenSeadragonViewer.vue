@@ -13,7 +13,7 @@
 </template>
 
 <script>
-/* global OpenSeadragon, _ */
+/* global OpenSeadragon, debounce */
 
 const dependencies = [
     'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
@@ -239,7 +239,8 @@ module.exports = {
       const imageBounds = tiledImage.viewportToImageRectangle(viewportBounds)
       return `${Math.ceil(imageBounds.x)},${Math.ceil(imageBounds.y)},${Math.ceil(imageBounds.width)},${Math.ceil(imageBounds.height)}`
     },
-    viewportChange: _.debounce(function () {
+    viewportChange: debounce(function () {
+      console.log('viewportChange')
       document.querySelector('#bottom-overlay').innerHTML = this.imageViewportCoords()
     }, 100),
     gotoAnnotation(anno) {
