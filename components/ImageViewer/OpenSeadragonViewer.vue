@@ -85,10 +85,10 @@ module.exports = {
       this.viewer.addHandler('open', () => {
         let customButton = new OpenSeadragon.Button({
           tooltip: 'Custom',
-          srcRest: `/images/flip_rest.png`,
-          srcGroup: `/images/flip_rest.png`,
-          srcHover: `/images/flip_rest.png`,
-          srcDown: `/images/flip_rest.png`,
+          srcRest: `flip_rest.png`,
+          srcGroup: `flip_rest.png`,
+          srcHover: `flip_rest.png`,
+          srcDown: `flip_rest.png`,
           onClick: this.onCustomButtonClick
         })
         // this.viewer.addControl(customButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT })
