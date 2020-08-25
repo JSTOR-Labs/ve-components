@@ -1,9 +1,9 @@
 <template>
   <div class="main">
     <div id="top-overlay" class="overlay">
-      <template v-if="currentItem.annotations">
-        <img src="images/next_rest.png" style="float:right;" @click="viewNextAnnotation">
-        <img src="images/previous_rest.png" style="float:right;" @click="viewPreviousAnnotation">
+      <template v-if="currentItem.annotations && currentItem.annotations.length > 0">
+        <img :src="`${prefixUrl}next_rest.png`" style="float:right;" @click="viewNextAnnotation">
+        <img :src="`${prefixUrl}prvious_rest.png`" style="float:right;" @click="viewPreviousAnnotation">
       </template>
       <div v-html="title" style="float:left;"></div>
     </div>
@@ -43,7 +43,10 @@ module.exports = {
     zoom: undefined,
     drag: false,
     annoCursor: 0,
-    currentItem: undefined
+    currentItem: undefined,
+    showControls: true,
+    showNavigator: false,
+    prefixUrl
   }),
   computed: {
     containerStyle() { return { position: 'relative', width: `${this.width}px`, height: `${this.height}px`, overflowY: 'auto !important' } },
@@ -79,23 +82,26 @@ module.exports = {
         degrees: parseInt(this.currentItem.rotate || '0'),
         // animationTime: 100,
         homeFillsViewer: this.fit === 'cover',
+        showHomeControl: this.showControls,
+        showZoomControl: this.showControls,
         showFullPageControl: false,
-        prefixUrl: prefixUrl
+        showNavigator: this.showNavigator,
+        prefixUrl: this.prefixUrl
       })
       this.viewer.addHandler('open', () => {
-        let customButton = new OpenSeadragon.Button({
-          tooltip: 'Custom',
-          srcRest: `${prefixUrl}flip_rest.png`,
-          srcGroup: `${prefixUrl}flip_rest.png`,
-          srcHover: `${prefixUrl}flip_rest.png`,
-          srcDown: `${prefixUrl}flip_rest.png`,
-          onClick: this.onCustomButtonClick
-        })
-        // this.viewer.addControl(customButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT })
-        this.viewer.buttons.buttons.push(customButton)
-        this.viewer.buttons.element.appendChild(customButton.element)
-        console.log(this.viewer)
-
+        if (this.showControls) {
+          let customButton = new OpenSeadragon.Button({
+            tooltip: 'Custom',
+            srcRest: `${this.prefixUrl}selection_rest.png`,
+            srcGroup: `${this.prefixUrl}selection_grouphover.png`,
+            srcHover: `${this.prefixUrl}selection_hover.png`,
+            srcDown: `${this.prefixUrl}selection_pressed.png`,
+            onClick: this.onCustomButtonClick
+          })
+          // this.viewer.addControl(customButton.element, { anchor: OpenSeadragon.ControlAnchor.TOP_LEFT })
+          this.viewer.buttons.buttons.push(customButton)
+          this.viewer.buttons.element.appendChild(customButton.element)
+        }
         this.currentRegion = this.currentItem.region ? this.parseRegionString(this.currentItem.region) : null
         if (this.currentRegion) this.positionImage()
         document.querySelector('#bottom-overlay').innerHTML = this.imageViewportCoords()
@@ -344,13 +350,17 @@ module.exports = {
 </script>
 
 <style>
+.openseadragon-container > div:nth-of-type(2) {
+  margin: 8px 24px !important;
+}
 
 #top-overlay {
-  width: 300px;
+  width: 400px;
   height: 100px;
   padding: 6px;
-  margin-top: 32px;
+  margin: 40px 0 0 28px;
   font-size: 1.1em;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
 }
 #bottom-overlay {
   bottom: 0;
@@ -366,7 +376,7 @@ module.exports = {
 }
 
 .main .overlay {
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.8);
   visibility: hidden;
   opacity: 0;
   transition: all 1s ease-out;
