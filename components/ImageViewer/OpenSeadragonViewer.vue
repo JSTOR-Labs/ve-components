@@ -79,7 +79,8 @@ module.exports = {
         degrees: parseInt(this.currentItem.rotate || '0'),
         // animationTime: 100,
         homeFillsViewer: this.fit === 'cover',
-        showFullPageControl: false
+        showFullPageControl: false,
+        prefixUrl: 'https://raw.githubusercontent.com/jstor-labs/ve-components/master/public/images/'
       })
       this.viewer.addHandler('open', () => {
         let customButton = new OpenSeadragon.Button({

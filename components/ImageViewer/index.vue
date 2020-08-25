@@ -29,8 +29,8 @@ module.exports = {
     another: String
   },
   components: {
-    openSeadragonImageViewer: 'url:https://raw.githubusercontent.com/jstor-labs/ve-components/master/components/ImageViewer/OpenSeadragonViewer.vue',
-    staticImageViewer: 'url:https://raw.githubusercontent.com/jstor-labs/ve-components/master/components/ImageViewer/StaticImageViewer.vue'
+    openSeadragonImageViewer: 'url:/components/ImageViewer/OpenSeadragonViewer.vue',
+    staticImageViewer: 'url:/components/ImageViewer/StaticImageViewer.vue'
   },
   data: () => ({
     mode: 'static',

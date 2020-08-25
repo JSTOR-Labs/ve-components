@@ -5,7 +5,7 @@
     { "name": "imageViewer", "src": "/components/ImageViewer/index.vue", "selectors": ["tag:image"], "icon": "fa-file-image", "label": "Images"},
     { "name": "staticImageViewer", "src": "/components/ImageViewer/StaticImageViewer.vue"},
     { "name": "miradorImageViewer", "src": "/components/ImageViewer/MiradorViewer.vue"},
-    { "name": "openSeadragonImageViewer", "src": "/components/ImageViewer/OpenSeadragonViewer.vue.vue"},
+    { "name": "openSeadragonViewer", "src": "/components/ImageViewer/OpenSeadragonViewer.vue"},
     { "name": "imageViewerModal", "src": "/components/ImageViewer/ImageViewerModal.vue"},
     { "name": "videoPlayer", "src": "/components/VideoPlayer.vue", "selectors": ["tag:video"], "icon": "fa-video", "label": "Videos"},
     { "name": "storiiiesViewer", "src": "/components/StoriiiesViewer.vue", "selectors": ["tag:storiiies"], "icon": "fa-book", "label": "Storiiies Viewer"},
