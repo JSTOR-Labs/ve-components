@@ -292,7 +292,8 @@ module.exports = {
       }
     },
     viewportChange: _.debounce(function (e) {
-      document.querySelector('#bottom-overlay').innerHTML = this.imageViewportCoords()
+      const bottomOverlay = document.getElementById('bottom-overlay')
+      if (bottomOverlay) bottomOverlay.innerHTML = this.imageViewportCoords()
     }, 100),
     addHandlers(elemId) {
       console.log('addHandlers')

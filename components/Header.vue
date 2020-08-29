@@ -97,14 +97,15 @@
       lastHeight: undefined
     }),
     computed: {
-      banner() { return this.essayConfig.banner || this.siteConfig.banner },
-      bannerHeight() { return this.essayConfig.bannerHeight || this.siteConfig.bannerHeight || 400 },
-      title() { return  this.essayConfig.title || this.siteConfig.title },
-      author() { return this.essayConfig.author || '&nbsp;' },
-      numMaps() { return this.essayConfig['num-maps'] },
-      numImages() { return this.essayConfig['num-images'] },
-      numSpecimens() { return this.essayConfig['num-specimens']},
-      numPrimarySources() { return this.essayConfig['num-primary-sources'] },
+      essayConfigLoaded() { return this.essayConfig !== null },
+      banner() { return this.essayConfigLoaded ? this.essayConfig.banner || this.siteConfig.banner : null },
+      bannerHeight() { return this.essayConfigLoaded ? this.essayConfig.bannerHeight || this.siteConfig.bannerHeight : 400 },
+      title() { return this.essayConfigLoaded ? this.essayConfig.title || this.siteConfig.title : null },
+      author() { return (this.essayConfigLoaded && this.essayConfig.author) || '&nbsp;' },
+      numMaps() { return (this.essayConfigLoaded && this.essayConfig['num-maps']) },
+      numImages() { return (this.essayConfigLoaded && this.essayConfig['num-images']) },
+      numSpecimens() { return (this.essayConfigLoaded && this.essayConfig['num-specimens']) },
+      numPrimarySources() { return (this.essayConfigLoaded && this.essayConfig['num-primary-sources']) },
       hasStats() { return this.numMaps !== undefined || this.numImages !== undefined || this.numSpecimens !== undefined || this.numPrimarySources !== undefined }
     },
     mounted() {
@@ -143,6 +144,14 @@
         if (scrollableContent) {
           scrollableContent.scrollTo(0, scrollableContent.scrollTop - wheelDelta)
         }
+      }
+    },
+    watch: {
+      essayConfigLoaded: {
+        handler: (essayConfigLoaded) => {
+          console.log('essayConfigLoaded', essayConfigLoaded)
+        },
+        immediate: true
       }
     }
   }
