@@ -53,9 +53,7 @@ module.exports = {
             ? 'static'
             : 'iiif'
           : undefined
-        this.mode = this.items.length > 1
-          ? 'static'
-          : requestedMode || this.initialMode
+        this.mode = requestedMode || this.initialMode
         console.log(`ImageViewer items=${this.items.length} requestedMode=${requestedMode} mode=${this.mode}`, this.items)
       },
       immediate: true

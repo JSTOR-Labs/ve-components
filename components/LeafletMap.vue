@@ -26,7 +26,9 @@ const baseLayers = {
   'OpenTopoMap': ['https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
         { maxZoom: 17, attribution: 'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)' }],
   'Stamen_Watercolor': ['https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}',
-        {	subdomains: 'abcd', minZoom: 1, maxZoom: 16, ext: 'jpg', attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }]
+        {	subdomains: 'abcd', minZoom: 1, maxZoom: 16, ext: 'jpg', attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }],
+  'Esri_NatGeoWorldMap': ['https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+        { attribution: 'Tiles &copy; Esri &mdash; National Geographic, Esri, DeLorme, NAVTEQ, UNEP-WCMC, USGS, NASA, ESA, METI, NRCAN, GEBCO, NOAA, iPC', maxZoom: 16 }]
 }
 
 const defaults = {
@@ -87,7 +89,6 @@ module.exports = {
     isSelected() { return this.selected === 'mapViewer' }
   },
   mounted() {
-
     console.log(`${this.$options.name}.mounted: height=${this.height} width=${this.width}`, this.mapDef)
     this.loadDependencies(dependencies, 0, this.init)
   },
@@ -442,7 +443,7 @@ module.exports = {
           if (this.map) {
             this.$nextTick(() => this.map.invalidateSize())
           }
-          console.log(`${this.$options.name}.refresh: height=${this.height} width=${this.width} timeSelectorHeight=${timeSelectorHeight} mapHeight=${this.mapHeight} lmap=${lmap ? lmap.style.height : 0}`)
+          // console.log(`${this.$options.name}.refresh: height=${this.height} width=${this.width} timeSelectorHeight=${timeSelectorHeight} mapHeight=${this.mapHeight} lmap=${lmap ? lmap.style.height : 0}`)
         }
       })
     }
