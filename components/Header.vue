@@ -98,7 +98,7 @@
     }),
     computed: {
       essayConfigLoaded() { return this.essayConfig !== null },
-      banner() { return this.essayConfigLoaded ? this.essayConfig.banner || this.siteConfig.banner : null },
+      banner() { return this.essayConfigLoaded ? (this.essayConfig.banner || this.siteConfig.banner) : null },
       bannerHeight() { return this.essayConfigLoaded ? this.essayConfig.bannerHeight || this.siteConfig.bannerHeight : 400 },
       title() { return this.essayConfigLoaded ? this.essayConfig.title || this.siteConfig.title : null },
       author() { return (this.essayConfigLoaded && this.essayConfig.author) || '&nbsp;' },
@@ -106,7 +106,7 @@
       numImages() { return (this.essayConfigLoaded && this.essayConfig['num-images']) },
       numSpecimens() { return (this.essayConfigLoaded && this.essayConfig['num-specimens']) },
       numPrimarySources() { return (this.essayConfigLoaded && this.essayConfig['num-primary-sources']) },
-      hasStats() { return this.numMaps !== undefined || this.numImages !== undefined || this.numSpecimens !== undefined || this.numPrimarySources !== undefined }
+      hasStats() { return this.numMaps || this.numImages || this.numSpecimens || this.numPrimarySources }
     },
     mounted() {
       document.getElementById('header').addEventListener('wheel', this.throttle(this.scrollContent, 40))

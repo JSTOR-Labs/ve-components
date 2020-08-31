@@ -110,14 +110,14 @@ module.exports = {
         this.addAnnotatorToggleButton()
         this.viewer.addHandler('home', (e) => {
           this.annoCursor = 0
-          this.positionImage(e.immediately)
+          this.positionImage(e.immediately, 'home')
         })
         this.viewer.addHandler('page', this.newPage)
         this.viewer.addHandler('viewport-change', this.viewportChange)
         this.viewer.world.addHandler('add-item', () => {
           this.imageSize = this.viewer.world.getItemAt(0).getContentSize()
           console.log(`width=${this.imageSize.x} height=${this.imageSize.y}`)
-          this.positionImage()
+          // this.positionImage(false, 'add-item')
         })
         // if (this.viewer.referenceStrip.element) this.viewer.referenceStrip.element.style.height= '100px'
         if (this.manifests) {
@@ -140,9 +140,9 @@ module.exports = {
           this.viewer.open(this.manifests.map(manifest => `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`))
         })
     },
-    positionImage(immediately) {
+    positionImage (immediately, from) {
       immediately = immediately || false
-      console.log('positionImage', immediately)
+      console.log('positionImage', from, immediately)
       if (this.currentItem) {
         this.$nextTick(() => {
           if (this.currentItem.region) {
@@ -157,6 +157,14 @@ module.exports = {
         })
       }
     },
+    goHome(immediately) {
+      immediately = immediately || false
+      if (this.viewer) this.viewer.viewport.goHome(immediately)
+    },
+    viewportChange: _.debounce(function (e) {
+      const bottomOverlay = document.getElementById('bottom-overlay')
+      if (bottomOverlay) bottomOverlay.innerHTML = this.imageViewportCoords()
+    }, 100),
     addAnnotatorToggleButton() {
       let customButton = new OpenSeadragon.Button({
         tooltip: 'Toggle annotator enabled',
@@ -175,10 +183,6 @@ module.exports = {
     },
     newPage(e) {
       this.page = e.page
-    },
-    goHome(immediately) {
-      immediately = immediately || false
-      if (this.viewer) this.viewer.viewport.goHome(immediately)
     },
     attr(label) {
       const attr = this.currentItem.metadata
@@ -291,10 +295,6 @@ module.exports = {
         return `${Math.ceil(imageBounds.x)},${Math.ceil(imageBounds.y)},${Math.ceil(imageBounds.width)},${Math.ceil(imageBounds.height)}`
       }
     },
-    viewportChange: _.debounce(function (e) {
-      const bottomOverlay = document.getElementById('bottom-overlay')
-      if (bottomOverlay) bottomOverlay.innerHTML = this.imageViewportCoords()
-    }, 100),
     addHandlers(elemId) {
       console.log('addHandlers')
       Array.from (document.querySelectorAll(`#${elemId} span`))
@@ -405,7 +405,7 @@ module.exports = {
           this.page = 0
           this.currentItem = { ...this.manifests[this.page], ...current[0] }
         }
-        this.positionImage()
+        // this.positionImage(false, 'items')
       },
       immediate: false
     },
