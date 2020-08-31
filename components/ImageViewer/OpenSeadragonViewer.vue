@@ -61,12 +61,6 @@ module.exports = {
         maxHeight: this.annotatorEnabled ? `${this.width}px` : ''
       }
     },
-    label() { return this.annoCursor > 0 
-      ? this.currentItem.annotations[this.annoCursor - 1].body[0].value
-      : this.currentItem
-        ? this.currentItem.label || this.currentItem.title
-        : undefined
-    },
     fit() { return this.currentItem.fit || this.defaultFit },
     annosEndpoint() { return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
       ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?')[0]
@@ -76,7 +70,19 @@ module.exports = {
       ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
       : null
     },
-    annotations() { const annos = this.currentItem ? this.currentItem.annotations || [] : []; console.log('annotations', annos.length); return annos; }
+    annotations() { const annos = this.currentItem ? this.currentItem.annotations || [] : []; console.log('annotations', annos.length); return annos; },
+    metadata() {
+      const metadata = {} 
+      if (this.currentItem && this.currentItem.metadata) {
+        this.currentItem.metadata.forEach(md => metadata[md.label] = md.value)
+      }
+      console.log('metadata', metadata)
+      return metadata
+    },
+    label() { return this.annoCursor > 0 
+      ? this.currentItem.annotations[this.annoCursor - 1].body[0].value
+      : this.metadata.label
+    }
   },
   mounted() {
     this.loadDependencies(dependencies, 0, this.init)
