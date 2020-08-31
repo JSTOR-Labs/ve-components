@@ -19,12 +19,11 @@
 const dependencies = [
   'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
   'https://recogito.github.io/js/openseadragon-annotorious.min.js',
-  'https://altert.github.io/OpenseadragonFabricjsOverlay/openseadragon-fabricjs-overlay.js',
-  'https://altert.github.io/OpenseadragonFabricjsOverlay/fabric/fabric.adapted.js'
+  // 'https://altert.github.io/OpenseadragonFabricjsOverlay/openseadragon-fabricjs-overlay.js',
+  // 'https://altert.github.io/OpenseadragonFabricjsOverlay/fabric/fabric.adapted.js'
 ]
 
 const prefixUrl = 'https://raw.githubusercontent.com/jstor-labs/ve-components/master/public/images/'
-const annosEndpoint = 'https://annotations.visual-essays.app'
 const annosHeaders = {
   'Content-Type': 'application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"', 
   Accept: 'application/ld+json; profile="http://www.w3.org/ns/anno.jsonld"'
@@ -68,8 +67,15 @@ module.exports = {
         ? this.currentItem.label || this.currentItem.title
         : undefined
     },
-    target() { return this.attr('source') },
     fit() { return this.currentItem.fit || this.defaultFit },
+    annosEndpoint() { return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
+      ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?')[0]
+      : null
+    },
+    target () { return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
+      ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
+      : null
+    },
     annotations() { const annos = this.currentItem ? this.currentItem.annotations || [] : []; console.log('annotations', annos.length); return annos; }
   },
   mounted() {
@@ -126,12 +132,14 @@ module.exports = {
         // console.log(this.drawRect({left: 0, top: 0, width: this.viewer.drawer.canvas.width-2, height: this.viewer.drawer.canvas.height-2, stroke: 'red', strokeWidth: 2, fill: null}))
       })
     },
+    /*
     drawRect(rect) {
       console.log('drawRect', rect)
       if (!this.overlay) this.overlay = this.viewer.fabricjsOverlay({scale: 1})
       this.overlay.resize()
       return this.overlay.fabricCanvas().add(new fabric.Rect(rect))
     },
+    */
     loadManifests(items) {
       console.log('loadManifests')
       Promise.all(items.map(item => fetch(item.manifest).then(resp => resp.json())))
@@ -205,7 +213,7 @@ module.exports = {
       this.setAnnotatorEnabled(this.annotatorEnabled)
     },
     loadAnnotations() {
-      const url = `${annosEndpoint}/ve/?target=${encodeURIComponent(this.target)}`
+      const url = `${this.annosEndpoint}?target=${encodeURIComponent(this.target)}`
       console.log('loadAnnotations', url)
       return fetch(url)
         .then(resp => resp.json())
@@ -224,7 +232,7 @@ module.exports = {
       console.log('createAnnotation', anno)
       anno.seq = this.currentItem.annotations.length
       anno.target.id = this.target
-      fetch(`${annosEndpoint}/ve/`, {method: 'POST', headers: annosHeaders, body: JSON.stringify(anno)})
+      fetch(`${this.annosEndpoint}`, {method: 'POST', headers: annosHeaders, body: JSON.stringify(anno)})
       .then(resp => resp.json())
       .then(createdAnno => {
         this.currentItem = { ...this.currentItem, ...{annotations: [...this.currentItem.annotations, createdAnno]}}
@@ -233,7 +241,7 @@ module.exports = {
     updateAnnotation(anno) {
       console.log('updateAnnotation', anno)
       const _id = anno.id.split('/').pop()
-      fetch(`${annosEndpoint}/ve/${_id}`, {method: 'PUT', headers: annosHeaders, body: JSON.stringify(anno)})
+      fetch(`${this.annosEndpoint}${_id}`, {method: 'PUT', headers: annosHeaders, body: JSON.stringify(anno)})
       .then(resp => resp.json())
       .then(updated => {
         const annoId = updated.id.split('/').pop()
@@ -251,7 +259,7 @@ module.exports = {
     },
     deleteAnnotation(anno) {
       const _id = anno.id.split('/').pop()
-      fetch(`${annosEndpoint}/ve/${_id}`, { method: 'DELETE' })
+      fetch(`${this.annosEndpoint}${_id}`, { method: 'DELETE' })
       .then(resp => {
         if (resp.ok) {
           const annoId = resp.url.split('/').pop()
