@@ -1,6 +1,6 @@
 <template>
   <div class="main">
-    <div id="top-overlay" class="overlay">
+    <div v-if="label" id="top-overlay" class="overlay">
       <template v-if="annotations.length > 0">
         <img :src="`${prefixUrl}next_rest.png`" style="float:right;" @click="viewNextAnnotation">
         <img :src="`${prefixUrl}previous_rest.png`" style="float:right;" @click="viewPreviousAnnotation">
@@ -81,7 +81,7 @@ module.exports = {
     },
     label() { return this.annoCursor > 0 
       ? this.currentItem.annotations[this.annoCursor - 1].body[0].value
-      : this.metadata.label
+      : this.metadata.label || this.currentItem ? this.currentItem.label : null
     }
   },
   mounted() {
