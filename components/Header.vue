@@ -99,7 +99,7 @@
     computed: {
       essayConfigLoaded() { return this.essayConfig !== null },
       banner() { return this.essayConfigLoaded ? (this.essayConfig.banner || this.siteConfig.banner) : null },
-      bannerHeight() { return this.essayConfigLoaded ? (this.essayConfig.bannerHeight || this.siteConfig.bannerHeight) : 400 },
+      bannerHeight() { return this.essayConfig.bannerHeight || this.siteConfig.bannerHeight || 400 },
       title() { return this.essayConfigLoaded ? (this.essayConfig.title || this.siteConfig.title) : null },
       author() { return (this.essayConfigLoaded && this.essayConfig.author) || '&nbsp;' },
       numMaps() { return (this.essayConfigLoaded && this.essayConfig['num-maps']) },
@@ -149,7 +149,13 @@
     watch: {
       essayConfigLoaded: {
         handler: (essayConfigLoaded) => {
-          console.log('essayConfigLoaded', essayConfigLoaded)
+          console.log('essayConfigLoaded', this.essayConfig, this.siteConfig)
+        },
+        immediate: true
+      },
+      bannerHeight: {
+        handler: (bannerHeight) => {
+          console.log('bannerHeight', bannerHeight)
         },
         immediate: true
       }
