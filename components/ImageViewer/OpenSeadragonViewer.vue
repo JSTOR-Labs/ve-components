@@ -151,7 +151,13 @@ module.exports = {
       Promise.all(items.map(item => fetch(item.manifest).then(resp => resp.json())))
         .then(manifests => {
           this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...items[idx]}})
-          this.viewer.open(this.manifests.map(manifest => `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`))
+          const tileSources = this.manifests.map(manifest => {
+            return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource
+              ? `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`
+              : { url: manifest.sequences[0].canvases[0].images[0]['@id'], type: 'image', buildPyramid: true }
+          })
+          console.log('tileSources', tileSources)
+          this.viewer.open(tileSources)
         })
     },
     positionImage (immediately, from) {
