@@ -154,7 +154,8 @@ module.exports = {
           const tileSources = this.manifests.map(manifest => {
             return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource
               ? `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`
-              : { url: manifest.sequences[0].canvases[0].images[0]['@id'], type: 'image', buildPyramid: true }
+              : { url: manifest.sequences[0].canvases[0].images[0]['@id'] || manifest.metadata.find(md => md.label === 'source').value,
+                 type: 'image', buildPyramid: true }
           })
           console.log('tileSources', tileSources)
           this.viewer.open(tileSources)
