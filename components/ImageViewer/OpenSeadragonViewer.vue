@@ -159,9 +159,13 @@ module.exports = {
     */
     loadManifests(items) {
       console.log('loadManifests')
-      Promise.all(items.map(item => fetch(item.manifest).then(resp => resp.json())))
+      const sortedItems = [
+        ...items.filter(item => item.primary === 'true'),
+        ...items.filter(item => item.primary !== 'true')
+      ]
+      Promise.all(sortedItems.map(item => fetch(item.manifest).then(resp => resp.json())))
         .then(manifests => {
-          this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...items[idx]}})
+          this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...sortedItems[idx]}})
           const tileSources = this.manifests.map(manifest => {
             return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource.service
               ? `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`
