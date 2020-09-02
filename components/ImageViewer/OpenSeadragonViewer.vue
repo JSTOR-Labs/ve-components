@@ -19,6 +19,7 @@
 const dependencies = [
   'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
   'https://recogito.github.io/js/openseadragon-annotorious.min.js',
+  'https://cdn.jsdelivr.net/npm/sjcl@1.0.8/sjcl.min.js'
   // 'https://altert.github.io/OpenseadragonFabricjsOverlay/openseadragon-fabricjs-overlay.js',
   // 'https://altert.github.io/OpenseadragonFabricjsOverlay/fabric/fabric.adapted.js'
 ]
@@ -32,6 +33,9 @@ const annosHeaders = {
 module.exports = {
   name: 'OpenSeadragonViewer',
   props: {
+    acct: String,
+    repo: String,
+    path: String,
     active: String,
     items: Array,
     width: Number,
@@ -66,9 +70,12 @@ module.exports = {
       ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?')[0]
       : null
     },
-    target () { return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
-      ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
-      : null
+    target() { 
+      //return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
+      //  ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
+      //  : null
+      const imageSourceHash = this.sha256(this.currentItem.sequences[0].canvases[0].images[0].resource['@id'])
+      return `https://visual-essays.app/${this.acct}/${this.repo}${this.path}/${imageSourceHash}`
     },
     annotations() { const annos = this.currentItem ? this.currentItem.annotations || [] : []; console.log('annotations', annos.length); return annos; },
     metadata() {
@@ -90,8 +97,12 @@ module.exports = {
   methods: {
     init() {
       console.log(this.$options.name, this.items, this.active, this.width, this.height, this.defaultFit, this.selected)
+      console.log(`acct=${this.acct} repo=${this.repo} path=${this.path}`)
       this.initViewer()
       this.loadManifests(this.items)
+    },
+    sha256(s) {
+      return sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(s))
     },
     initViewer() {
       console.log('initViewer')
@@ -152,9 +163,9 @@ module.exports = {
         .then(manifests => {
           this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...items[idx]}})
           const tileSources = this.manifests.map(manifest => {
-            return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource
+            return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource.service
               ? `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`
-              : { url: manifest.sequences[0].canvases[0].images[0]['@id'] || manifest.metadata.find(md => md.label === 'source').value,
+              : { url: manifest.sequences[0].canvases[0].images[0].resource['@id'] || manifest.metadata.find(md => md.label === 'source').value,
                  type: 'image', buildPyramid: true }
           })
           console.log('tileSources', tileSources)
@@ -227,7 +238,7 @@ module.exports = {
     },
     loadAnnotations() {
       const url = `${this.annosEndpoint}?target=${encodeURIComponent(this.target)}`
-      console.log('loadAnnotations', url)
+      console.log('loadAnnotations', this.target, url)
       return fetch(url)
         .then(resp => resp.json())
         .then(data => {
@@ -458,6 +469,12 @@ module.exports = {
         this.setAnnotatorEnabled(annotatorIsEnabled)
       },
       immediate: false
+    },
+    acct: {
+      handler: function (acct) {
+        console.log(`osd.acct=${acct}`)
+      },
+      immediate: true
     }
   }
 }

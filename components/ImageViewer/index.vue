@@ -2,6 +2,9 @@
   <div id="image-viewer" >
     <component 
       v-bind:is="mode === 'iiif' ? 'openSeadragonImageViewer' : 'staticImageViewer'"
+      :acct="acct"
+      :repo="repo"
+      :path="path"
       :width="width" 
       :height="height" 
       :seq="seq" 
@@ -18,6 +21,9 @@
 module.exports = {
   name: 'ImageViewer',
   props: {
+    acct: String,
+    repo: String,
+    path: String,
     seq: {type: Number, default: 1},
     items: Array,
     activeElement: String,
