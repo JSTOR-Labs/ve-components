@@ -16,6 +16,7 @@
 <script>
 /* global OpenSeadragon, _ */
 
+const annosEndpoint = 'https://annotations.visual-essays.app/ve/'
 const dependencies = [
   'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
   'https://recogito.github.io/js/openseadragon-annotorious.min.js',
@@ -66,10 +67,6 @@ module.exports = {
       }
     },
     fit() { return this.currentItem.fit || this.defaultFit },
-    annosEndpoint() { return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
-      ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?')[0]
-      : null
-    },
     target() { 
       //return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
       //  ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
@@ -165,7 +162,7 @@ module.exports = {
       ]
       Promise.all(sortedItems.map(item => fetch(item.manifest).then(resp => resp.json())))
         .then(manifests => {
-          this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...sortedItems[idx]}})
+          this.manifests = manifests.map((manifest, idx) => {return {...manifest, ...items[idx]}})
           const tileSources = this.manifests.map(manifest => {
             return manifest.iiif && manifest.sequences[0].canvases[0].images[0].resource.service
               ? `${manifest.sequences[0].canvases[0].images[0].resource.service['@id']}/info.json`
@@ -241,7 +238,7 @@ module.exports = {
       this.setAnnotatorEnabled(this.annotatorEnabled)
     },
     loadAnnotations() {
-      const url = `${this.annosEndpoint}?target=${encodeURIComponent(this.target)}`
+      const url = `${annosEndpoint}?target=${encodeURIComponent(this.target)}`
       console.log('loadAnnotations', this.target, url)
       return fetch(url)
         .then(resp => resp.json())
@@ -260,7 +257,7 @@ module.exports = {
       console.log('createAnnotation', anno)
       anno.seq = this.currentItem.annotations.length
       anno.target.id = this.target
-      fetch(`${this.annosEndpoint}`, {method: 'POST', headers: annosHeaders, body: JSON.stringify(anno)})
+      fetch(`${annosEndpoint}`, {method: 'POST', headers: annosHeaders, body: JSON.stringify(anno)})
       .then(resp => resp.json())
       .then(createdAnno => {
         this.currentItem = { ...this.currentItem, ...{annotations: [...this.currentItem.annotations, createdAnno]}}
@@ -269,7 +266,7 @@ module.exports = {
     updateAnnotation(anno) {
       console.log('updateAnnotation', anno)
       const _id = anno.id.split('/').pop()
-      fetch(`${this.annosEndpoint}${_id}`, {method: 'PUT', headers: annosHeaders, body: JSON.stringify(anno)})
+      fetch(`${annosEndpoint}${_id}`, {method: 'PUT', headers: annosHeaders, body: JSON.stringify(anno)})
       .then(resp => resp.json())
       .then(updated => {
         const annoId = updated.id.split('/').pop()
@@ -287,7 +284,7 @@ module.exports = {
     },
     deleteAnnotation(anno) {
       const _id = anno.id.split('/').pop()
-      fetch(`${this.annosEndpoint}${_id}`, { method: 'DELETE' })
+      fetch(`${annosEndpoint}${_id}`, { method: 'DELETE' })
       .then(resp => {
         if (resp.ok) {
           const annoId = resp.url.split('/').pop()
@@ -400,7 +397,7 @@ module.exports = {
       const osdElem = document.getElementById('osd')
       if (osdElem) {
         document.getElementById('osd').style.maxHeight = enabled ? `${this.width}px` : ''
-        document.querySelector('.a9s-annotationlayer').style.display = enabled ? '' : 'none'
+        Array.from (document.querySelectorAll('.a9s-annotationlayer')).forEach(elem => elem.style.display = enabled ? '' : 'none')
       }
     }
   },
