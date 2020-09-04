@@ -255,7 +255,7 @@ module.exports = {
     },
     createAnnotation(anno) {
       console.log('createAnnotation', anno)
-      anno.seq = this.currentItem.annotations.length
+      anno.seq = this.currentItem.annotations ? this.currentItem.annotations.length : 0
       anno.target.id = this.target
       fetch(`${annosEndpoint}`, {method: 'POST', headers: annosHeaders, body: JSON.stringify(anno)})
       .then(resp => resp.json())
