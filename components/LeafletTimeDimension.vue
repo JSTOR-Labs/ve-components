@@ -49,8 +49,8 @@ module.exports = {
                     loopButton: true,
                     autoPlay: true,
                     playerOptions: {
-                        transitionTime: 1000,
-                        loop: true
+                        transitionTime: 250,
+                        loop: false
                     }
                 },
                 timeDimension: true,
@@ -61,17 +61,6 @@ module.exports = {
                 attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
             })
             osmLayer.addTo(map)
-
-            /*
-            let oReq = new XMLHttpRequest()
-            oReq.addEventListener('load', (xhr) => {
-                var response = xhr.currentTarget.response
-                var data = JSON.parse(response)
-                this.addGeoJSONLayer(map, data)
-            })
-            oReq.open('GET', 'data/bus.json')
-            oReq.send()
-            */
 
             fetch(this.items[0].url).then(resp => resp.text())
             .then(delimitedDataString => {
@@ -101,11 +90,9 @@ module.exports = {
                     resp.results.bindings.forEach(rec => {
                         const qid = rec.item.value.split('/').pop()
                         const latLng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
-                        console.log(qid, latLng)
                         coords[qid] = [ parseFloat(latLng[0]), parseFloat(latLng[1]) ]
                     })
                     const geoJSON = this.asGeoJSON(coords)
-                    console.log(geoJSON)
                     const geoJSONLayer = L.geoJSON(geoJSON, {
                         pointToLayer: function (feature, latLng) {
                             return L.circleMarker(latLng, {
@@ -120,21 +107,7 @@ module.exports = {
                         updateTimeDimensionMode: 'replace',
                         addlastPoint: true
                     })
-                    // geoJSONLayer.addTo(map)
                     geoJSONTDLayer.addTo(map)
-                    /*
-                    this.data.forEach(rec => {
-                        if (coords[rec.QID.id]) {
-                            const latLng = coords[rec.QID.id]
-                            L.circleMarker(latLng, {
-                                radius: 4,
-                                fillOpacity: 1
-                            })
-                            .bindPopup(rec.Location.id)
-                            .addTo(map)
-                        }
-                    })
-                    */
                 })
             })
 
