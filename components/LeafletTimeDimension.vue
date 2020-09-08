@@ -40,7 +40,8 @@ module.exports = {
   methods: {
         init() {
             let map = L.map('map', {
-                zoom: 14,
+                zoom: 2.5,
+                zoomSnap: 0.1,
                 fullscreenControl: true,
                 timeDimensionControl: true,
                 timeDimensionControlOptions: {
@@ -53,7 +54,7 @@ module.exports = {
                     }
                 },
                 timeDimension: true,
-                center: [36.72, -4.43]
+                center: [25, 0]
             })
 
             let osmLayer = L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -61,6 +62,7 @@ module.exports = {
             })
             osmLayer.addTo(map)
 
+            /*
             let oReq = new XMLHttpRequest()
             oReq.addEventListener('load', (xhr) => {
                 var response = xhr.currentTarget.response
@@ -69,6 +71,46 @@ module.exports = {
             })
             oReq.open('GET', 'data/bus.json')
             oReq.send()
+            */
+
+            fetch(this.items[0].url).then(resp => resp.text())
+            .then(delimitedDataString => {
+                this.data = this.delimitedStringToObjArray(delimitedDataString)
+                const qids = new Set()
+                this.data.forEach(item => qids.add(`wd:${item.QID.id}`))
+                return Array.from(qids)
+            })
+            .then(qids => {
+                console.log(qids.join(' '))
+                const sparql = `
+                SELECT ?item ?coords WHERE {
+                    VALUES ?item { ${qids.join(' ')} }
+                    ?item wdt:P625 ?coords .
+                }`
+                fetch('https://query.wikidata.org/sparql', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'User-agent': 'JSTOR Labs client',
+                        Accept: 'application/sparql-results+json'
+                    },
+                    body: `query=${encodeURIComponent(sparql)}`
+                }).then(resp => resp.json())
+                .then(resp => {
+                    const coords = {}
+                    resp.results.bindings.forEach(rec => {
+                        const qid = rec.item.value.split('/').pop()
+                        const latlng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
+                        coords[qid] = [ parseFloat(latlng[1]), parseFloat(latlng[0]) ]
+                    })
+                    console.log(coords)
+                    this.data.forEach(rec => {
+                        const latLng = coords[rec.QID.id]
+                        L.marker(latLng).addTo(map)
+                    })
+                })
+            })
+
         },
         addGeoJSONLayer(map, data) {
             let icon = L.icon({
