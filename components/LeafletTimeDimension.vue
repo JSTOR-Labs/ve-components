@@ -62,26 +62,16 @@ module.exports = {
             })
             osmLayer.addTo(map)
 
-            /*
-            let oReq = new XMLHttpRequest()
-            oReq.addEventListener('load', (xhr) => {
-                var response = xhr.currentTarget.response
-                var data = JSON.parse(response)
-                this.addGeoJSONLayer(map, data)
-            })
-            oReq.open('GET', 'data/bus.json')
-            oReq.send()
-            */
 
             fetch(this.items[0].url).then(resp => resp.text())
             .then(delimitedDataString => {
                 this.data = this.delimitedStringToObjArray(delimitedDataString)
+                console.log(this.data)
                 const qids = new Set()
                 this.data.forEach(item => qids.add(`wd:${item.QID.id}`))
                 return Array.from(qids)
             })
             .then(qids => {
-                console.log(qids.join(' '))
                 const sparql = `
                 SELECT ?item ?coords WHERE {
                     VALUES ?item { ${qids.join(' ')} }
@@ -100,51 +90,27 @@ module.exports = {
                     const coords = {}
                     resp.results.bindings.forEach(rec => {
                         const qid = rec.item.value.split('/').pop()
-                        const latlng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
-                        coords[qid] = [ parseFloat(latlng[1]), parseFloat(latlng[0]) ]
+                        const latLng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
+                        console.log(qid, latLng)
+                        coords[qid] = [ parseFloat(latLng[1]), parseFloat(latLng[0]) ]
                     })
-                    console.log(coords)
                     this.data.forEach(rec => {
-                        const latLng = coords[rec.QID.id]
-                        L.marker(latLng).addTo(map)
+                        if (coords[rec.QID.id]) {
+                            const latLng = coords[rec.QID.id]
+                            L.circleMarker(latLng, {
+                                radius: 4,
+                                fillOpacity: 1
+                            })
+                            .bindPopup(rec.Location.id)
+                            .addTo(map)
+                        }
                     })
                 })
             })
 
-        },
-        addGeoJSONLayer(map, data) {
-            let icon = L.icon({
-                iconUrl: 'images/bus.png',
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
-            })
-
-            let geoJSONLayer = L.geoJSON(data, {
-                pointToLayer: function (feature, latLng) {
-                    // eslint-disable-next-line
-                    if (feature.properties.hasOwnProperty('last')) {
-                        return new L.Marker(latLng, {
-                            icon: icon
-                        })
-                    }
-                    return L.circleMarker(latLng)
-                }
-            })
-
-            let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
-                updateTimeDimension: true,
-                duration: 'PT2M',
-                updateTimeDimensionMode: 'replace',
-                addlastPoint: true
-            })
-
-            // Show both layers: the geoJSON layer to show the whole track
-            // and the timedimension layer to show the movement of the bus 
-            geoJSONLayer.addTo(map)
-            geoJSONTDLayer.addTo(map)
         }
     }
 }
-</script>
 
+</script>
 <style scoped></style>
