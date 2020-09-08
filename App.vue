@@ -26,6 +26,7 @@
   import StaticImageViewer from './components/ImageViewer/StaticImageViewer.vue'
   import VideoPlayer from './components/VideoPlayer.vue'
   import PlantSpecimenViewer from './components/PlantSpecimenViewer.vue'
+  import LeafletTimeDimension from './components/LeafletTimeDimension.vue'
 
   const configs = {
     IIIFSideBySide: [{ 
@@ -68,10 +69,11 @@
         { id: 'item-0', url: 'https://upload.wikimedia.org/wikipedia/commons/0/02/Ann_Arbor_Art_Fair%2C_2019.jpg', title: 'Ann Arbor Art Fair' },
         { id: 'item-1', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Michigan_Theater%2C_Ann_Arbor_2020-05-05.jpg/1024px-Michigan_Theater%2C_Ann_Arbor_2020-05-05.jpg' }
     ],
-    PlantSpecimenViewer: [{ id: 'item-0', eid: 'Q165321', max: 1 }]
+    PlantSpecimenViewer: [{ id: 'item-0', eid: 'Q165321', max: 1 }],
+    LeafletTimeDimension: [{ id: 'item-0'}]
 }
 
-  const component = window.location.search.split('component=').pop() || 'D3PlusNetwork'
+  const component = window.location.search.split('component=').pop() || 'LeafletTimeDimension'
 
   export default {
     name: 'App',
@@ -88,7 +90,8 @@
       MiradorViewer,
       StaticImageViewer,
       VideoPlayer,
-      PlantSpecimenViewer
+      PlantSpecimenViewer,
+      LeafletTimeDimension
     },
     data: () => ({
       component,
