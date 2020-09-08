@@ -72,7 +72,7 @@ module.exports = {
         },
         addGeoJSONLayer(map, data) {
             let icon = L.icon({
-                iconUrl: 'data/images/bus.png',
+                iconUrl: 'images/bus.png',
                 iconSize: [22, 22],
                 iconAnchor: [11, 11]
             })
