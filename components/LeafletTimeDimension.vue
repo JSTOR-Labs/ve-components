@@ -62,6 +62,16 @@ module.exports = {
             })
             osmLayer.addTo(map)
 
+            /*
+            let oReq = new XMLHttpRequest()
+            oReq.addEventListener('load', (xhr) => {
+                var response = xhr.currentTarget.response
+                var data = JSON.parse(response)
+                this.addGeoJSONLayer(map, data)
+            })
+            oReq.open('GET', 'data/bus.json')
+            oReq.send()
+            */
 
             fetch(this.items[0].url).then(resp => resp.text())
             .then(delimitedDataString => {
@@ -92,8 +102,27 @@ module.exports = {
                         const qid = rec.item.value.split('/').pop()
                         const latLng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
                         console.log(qid, latLng)
-                        coords[qid] = [ parseFloat(latLng[1]), parseFloat(latLng[0]) ]
+                        coords[qid] = [ parseFloat(latLng[0]), parseFloat(latLng[1]) ]
                     })
+                    const geoJSON = this.asGeoJSON(coords)
+                    console.log(geoJSON)
+                    const geoJSONLayer = L.geoJSON(geoJSON, {
+                        pointToLayer: function (feature, latLng) {
+                            return L.circleMarker(latLng, {
+                                radius: 4,
+                                fillOpacity: 1
+                            })
+                        }
+                    })
+                    let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
+                        updateTimeDimension: true,
+                        duration: 'P100Y',
+                        updateTimeDimensionMode: 'replace',
+                        addlastPoint: true
+                    })
+                    // geoJSONLayer.addTo(map)
+                    geoJSONTDLayer.addTo(map)
+                    /*
                     this.data.forEach(rec => {
                         if (coords[rec.QID.id]) {
                             const latLng = coords[rec.QID.id]
@@ -105,12 +134,41 @@ module.exports = {
                             .addTo(map)
                         }
                     })
+                    */
                 })
             })
 
+        },
+        asGeoJSON(coords) {
+            const times = {}
+            this.data.forEach(rec => {
+                if (!times[rec.QID.id]) times[rec.QID.id] = []
+                times[rec.QID.id].push(this.asYear(rec.Date.id))
+            })
+            const added = new Set()
+            const geoJSON = { type: 'FeatureCollection', features: [] }
+            this.data.forEach(rec => {
+                const qid = rec.QID.id
+                const label = rec.Location.id
+                const coordinates = coords[qid]
+                if (coordinates && !added.has(qid)) {
+                    added.add(qid)
+                    geoJSON.features.push({
+                        type: 'Feature',
+                        properties: { label, qid, times: times[qid] },
+                        geometry: { type: 'Point', coordinates }
+                    })
+                }
+            })
+            return geoJSON
+        },
+        asYear(s) {
+            let year = s.match(/\d{4}/)
+            year = year ? year[0] : '2020'
+            return `${year}-01-01 00:00:00`
         }
     }
 }
-
 </script>
+
 <style scoped></style>
