@@ -3,16 +3,18 @@
 </template>
 
 <script>
-/* global L, _ */
+/* global L, _, moment */
 
 const dependencies = [
     'https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.css',
     'https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.control.min.css',
     'https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.js',
     'https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js',
-    'https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js'
+    'https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js',
+    'https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js'
 ]
 
+// Some leaflet baselayers
 const baseLayers = {
     'OpenStreetMap': ['https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
             { maxZoom: 18, attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>' }],
@@ -37,13 +39,24 @@ module.exports = {
         height: Number,
     },
     data: () => ({
-        timeDimension: true,
-        autoPlay: true,
-        loop: false,
-        baseLayer: 'Esri_WorldGrayCanvas',
-        autoFit: true,
-        fps: 1,
-        layerCoords: []
+        // Leaflet Map options
+            baseLayer: 'Esri_WorldGrayCanvas',
+            center: [25, 0],
+            zoom: 2.5,
+
+        // Leaflet.TimeDimension options: see https://github.com/socib/Leaflet.TimeDimension
+            timeDimension: true,
+            autoPlay: true,
+            loop: false,
+            fps: 1,
+            timeInterval: '1888-01-01/P1Y',
+            period: 'P1Y',
+            duration: 'P1Y',
+            autoFit: true,
+            dateFormat: 'YYYY', // refer to https://momentjs.com/docs/#/displaying/
+        
+        // layer coords collector, for autofit
+            layerCoords: []
     }),
     computed: {
         containerStyle() {
@@ -62,8 +75,8 @@ module.exports = {
   methods: {
         init() {
             let map = L.map('map', {
-                center: [25, 0],
-                zoom: 2.5,
+                center: this.center,
+                zoom: this.zoom,
                 zoomSnap: 0.1,
                 maxZoom: 5,
                 fullscreenControl: true,
@@ -72,21 +85,21 @@ module.exports = {
 
             if (this.timeDimension) {
                 let timeDimension = new L.TimeDimension({
-                    timeInterval: '1888-01-01/P1Y',
-                    period: 'P1Y'
+                    timeInterval: this.timeInterval,
+                    period: this.period
                 })
                 map.timeDimension = timeDimension
 
                 let player = new L.TimeDimension.Player({
                     transitionTime: 1000/this.fps,
-                    loop: this.loop,
+                    loop:      this.loop,
                     startOver: true
                 }, timeDimension)
 
                 let timeDimensionControlOptions = {
                     timeSliderDragUpdate: true,
-                    loopButton: true,
-                    autoPlay: this.autoPlay,
+                    loopButton:    true,
+                    autoPlay:      this.autoPlay,
                     player:        player,
                     timeDimension: timeDimension,
                     position:      'bottomleft',
@@ -95,7 +108,11 @@ module.exports = {
                     maxSpeed:      15
                 }
 
-                var timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions)
+                let timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions)
+                // override L.Control.TimeDimension_getDisplayDateFormat for custom date formatting
+                timeDimensionControl._getDisplayDateFormat = (date) => {
+                    return moment(date).format(this.dateFormat)
+                }
                 map.addControl(timeDimensionControl)
 
                 map.on('layeradd', e => {
@@ -151,7 +168,7 @@ module.exports = {
                     if (this.timeDimension) {
                        let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
                             updateTimeDimension: true,
-                            duration: 'P1Y',
+                            duration: this.duration,
                             updateTimeDimensionMode: 'replace',
                             addlastPoint: true
                         })
@@ -188,6 +205,7 @@ module.exports = {
             return geoJSON
         },
         asDateString(s) {
+            // TODO: improve date parsing
             let year = s.match(/\d{4}/)
             return `${year ? year[0] : (new Date()).getFullYear()}-01-01 00:00:00`
         },
@@ -201,4 +219,9 @@ module.exports = {
 }
 </script>
 
-<style scoped></style>
+<style>
+    .timecontrol-date {
+        font-size: 1.0rem;
+        font-weight: bold;
+    }
+</style>
