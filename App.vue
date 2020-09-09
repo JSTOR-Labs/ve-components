@@ -72,8 +72,8 @@
     PlantSpecimenViewer: [{ id: 'item-0', eid: 'Q165321', max: 1 }],
     LeafletTimeDimension: [{
         id: 'item-0',
-        url: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/graphs/corpse_flower.tsv',
-        // url: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/geojson/corpse_flower_bloom.json',
+        // data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/graphs/corpse_flower.tsv',
+        data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/geojson/corpse_flower_bloom.json',
         'time-dimension': 'true',
         basemap: 'Esri_WorldGrayCanvas',
         'max-zoom': '4',
