@@ -19,5 +19,5 @@
     { "name": "timeSelector", "src": "/components/TimeSelector.vue"},
     { "name": "entityInfobox", "src": "/components/EntityInfobox.vue"},
     { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"},
-    { "name": "leafletTimeDimension", "src": "/components/leafletTimeDimension.vue", "selectors": ["tag:ltd"], "icon": "fa-analytics", "label": "Leaflet Time Dimension"}
+    { "name": "leafletTimeDimension", "src": "/components/LeafletTimeDimension.vue", "selectors": ["tag:ltd"], "icon": "fa-analytics", "label": "Leaflet Time Dimension"}
 ]
