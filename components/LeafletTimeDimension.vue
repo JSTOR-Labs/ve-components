@@ -103,7 +103,8 @@ module.exports = {
             if (this.timeDimension) {
                 let timeDimension = new L.TimeDimension({
                     timeInterval: this.timeInterval,
-                    period: this.period
+                    period: this.period,
+                    addlastPoint: true
                 })
                 map.timeDimension = timeDimension
 
@@ -228,7 +229,7 @@ module.exports = {
         objArraytoGeoJSON(objArray, coordsMap) {
             const times = {}
             objArray.forEach(item => {
-                const date = moment(item.date)
+                const date = moment(item.date ? item.date : moment().format('YYYY-MM-DD'))
                 if (!times[item.qid]) times[item.qid] = []
                 times[item.qid].push(date)
             })

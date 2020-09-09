@@ -80,7 +80,8 @@
         'time-interval': '1888-01-01/P1Y',
         'date-format': 'YYYY',
         'auto-play': 'true',
-        'auto-fit': 'true'
+        'auto-fit': 'true',
+        fps: '4'
     }]}
 
   const component = window.location.search.split('component=').pop() || 'LeafletTimeDimension'
