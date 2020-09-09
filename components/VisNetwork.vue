@@ -77,7 +77,7 @@ module.exports = {
           edgeslist = data.edges;
         })
         .then((result) => this.getImages(nodeslist)) // eslint-disable-line no-unused-vars
-        .then((result) => {
+        .then(() => {
           this.renderGraph(nodeslist, edgeslist);
         });
     },
