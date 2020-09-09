@@ -31,6 +31,25 @@ const baseLayers = {
     'Esri_WorldGrayCanvas': ['https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
         { attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16 }]
 }
+
+const defaults = {
+    // Leaflet Map options
+        baseLayer: 'OpenStreetMap',
+        center: [25, 0],
+        zoom: 2.5,
+        maxZoom: 16,
+    // Leaflet.TimeDimension options: see https://github.com/socib/Leaflet.TimeDimension
+        timeDimension: false,
+        autoPlay: false,
+        loop: false,
+        fps: 1,
+        timeInterval: '/P1Y',
+        period: 'P1Y',
+        duration: 'P1Y',
+        autoFit: false,
+        dateFormat: 'YYYY-MM-DD', // refer to https://momentjs.com/docs/#/displaying/
+}
+
 module.exports = {
     name: "LeafletTimeDimension",
     props: {
@@ -39,26 +58,24 @@ module.exports = {
         height: Number,
     },
     data: () => ({
-        // Leaflet Map options
-            baseLayer: 'Esri_WorldGrayCanvas',
-            center: [25, 0],
-            zoom: 2.5,
-
-        // Leaflet.TimeDimension options: see https://github.com/socib/Leaflet.TimeDimension
-            timeDimension: true,
-            autoPlay: true,
-            loop: false,
-            fps: 1,
-            timeInterval: '1888-01-01/P1Y',
-            period: 'P1Y',
-            duration: 'P1Y',
-            autoFit: true,
-            dateFormat: 'YYYY', // refer to https://momentjs.com/docs/#/displaying/
-        
-        // layer coords collector, for autofit
-            layerCoords: []
+        layerCoords: []
     }),
     computed: {
+        item() { return this.items.length > 0 ? this.items[0] : {} },
+        url() { return this.item.url },
+        baseLayer() { return this.item.basemap || defaults.baseLayer },
+        center() { return this.item.center || defaults.center },
+        zoom() { return this.item.zoom || defaults.zoom },
+        maxZoom() { return this.item['max-zoom'] || defaults.maxZoom },
+        timeDimension() { return this.item['time-dimension'] === 'true' || defaults.timeDimension },
+        autoPlay() { return this.item['auto-play'] === 'true' || defaults.autoPlay },
+        loop() { return this.item.loop === 'true' || defaults.loop },
+        fps() { return this.item.fps || defaults.fps },
+        timeInterval() { return this.item['time-interval'] || defaults.timeInterval },
+        period() { return this.item.period || defaults.period },
+        duration() { return this.item.duration || defaults.duration },
+        autoFit() { return this.item['auto-fit'] === 'true' || defaults.autoFit },
+        dateFormat() { return this.item['date-format'] || defaults.dateFormat },
         containerStyle() {
             return {
                 width: `${this.width}px`,
@@ -78,7 +95,7 @@ module.exports = {
                 center: this.center,
                 zoom: this.zoom,
                 zoomSnap: 0.1,
-                maxZoom: 5,
+                maxZoom: this.maxZoom,
                 fullscreenControl: true,
                 layers: [L.tileLayer(...baseLayers[this.baseLayer])]
             })
@@ -124,7 +141,7 @@ module.exports = {
             }
 
             // Get data TSV file and convert to array of JSON object
-            fetch(this.items[0].url).then(resp => resp.text())
+            fetch(this.url).then(resp => resp.text())
             .then(delimitedDataString => {
                 this.data = this.delimitedStringToObjArray(delimitedDataString)
                 // Get distinct QIDs from input data
@@ -202,6 +219,7 @@ module.exports = {
                     })
                 }
             })
+            console.log(JSON.stringify(geoJSON, null, 2))
             return geoJSON
         },
         asDateString(s) {

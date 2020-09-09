@@ -70,8 +70,18 @@
         { id: 'item-1', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/48/Michigan_Theater%2C_Ann_Arbor_2020-05-05.jpg/1024px-Michigan_Theater%2C_Ann_Arbor_2020-05-05.jpg' }
     ],
     PlantSpecimenViewer: [{ id: 'item-0', eid: 'Q165321', max: 1 }],
-    LeafletTimeDimension: [{ id: 'item-0', url: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/master/graphs/corpse_flower.tsv'}]
-}
+    LeafletTimeDimension: [{
+        id: 'item-0',
+        url: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/master/graphs/corpse_flower.tsv',
+        // url: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/geojson/corpse_flower_bloom.json',
+        'time-dimension': 'true',
+        basemap: 'Esri_WorldGrayCanvas',
+        'max-zoom': '4',
+        'time-interval': '1888-01-01/P1Y',
+        'date-format': 'YYYY',
+        'auto-play': 'true',
+        'auto-fit': 'true'
+    }]}
 
   const component = window.location.search.split('component=').pop() || 'LeafletTimeDimension'
 
