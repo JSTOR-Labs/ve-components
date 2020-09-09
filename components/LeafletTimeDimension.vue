@@ -140,10 +140,38 @@ module.exports = {
                 })
             }
 
+            const inputType = this.url.split('.').pop()
+            if (inputType === 'tsv' || inputType === 'csv') {
+                this.delimitedDataToGeoJSON(this.url)
+                .then(geoJSON => {
+                    console.log('geoJSON', geoJSON)
+                    const geoJSONLayer = L.geoJSON(geoJSON, {
+                        pointToLayer: function (feature, latLng) {
+                            return L.circleMarker(latLng, {
+                                radius: 4,
+                                fillOpacity: 1
+                            })
+                        }
+                    })
+                    if (this.timeDimension) {
+                       let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
+                            updateTimeDimension: true,
+                            duration: this.duration,
+                            updateTimeDimensionMode: 'replace',
+                            addlastPoint: true
+                        })
+                        geoJSONTDLayer.addTo(map)
+                    } else {
+                        geoJSONLayer.addTo(map)
+                    }
+                })
+            }
+
             // Get data TSV file and convert to array of JSON object
+            /*
             fetch(this.url).then(resp => resp.text())
             .then(delimitedDataString => {
-                this.data = this.delimitedStringToObjArray(delimitedDataString)
+                this.data = this.toObjArray(delimitedDataString)
                 // Get distinct QIDs from input data
                 const qids = new Set()
                 this.data.forEach(item => qids.add(`wd:${item.QID.id}`))
@@ -195,20 +223,70 @@ module.exports = {
                     }
                 })
             })
-
+            */
+        },
+        async delimitedDataToGeoJSON(url) {
+            const delimiter = url.split('.').pop() === 'tsv' ? '\t' : ','
+            let resp = await fetch(url)
+            let delimitedDataString = await resp.text()
+            const objectArray = this.toObjArray(delimitedDataString, delimiter)
+            const qids = new Set()
+            objectArray.forEach(item => qids.add(`wd:${item.qid}`))
+            let coordsMap = await this.entityCoordsFromWikidata(Array.from(qids))
+            return this.toGeoJSON(objectArray, coordsMap)
+        },
+        async entityCoordsFromWikidata(qids) {
+            const sparql = `
+                SELECT ?item ?coords WHERE {
+                    VALUES ?item { ${qids.join(' ')} }
+                    ?item wdt:P625 ?coords .
+                }`
+            let resp = await fetch('https://query.wikidata.org/sparql', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'User-agent': 'JSTOR Labs client',
+                    Accept: 'application/sparql-results+json'
+                },
+                body: `query=${encodeURIComponent(sparql)}`
+            })
+            let wdResp = await resp.json()
+            const coordsMap = {}
+            wdResp.results.bindings.forEach(rec => {
+                const qid = rec.item.value.split('/').pop()
+                const latLng = rec.coords.value.replace(/Point\(/,'').replace(/\)/, '').split(' ')
+                coordsMap[qid] = [ parseFloat(latLng[0]), parseFloat(latLng[1]) ]
+            })
+            return coordsMap
+        },
+        toObjArray(delimitedData, delimiter) {
+            delimiter = delimiter || `\t`
+            const objArray = []
+            const lines = delimitedData.split('\n').filter(line => line.trim() !== '')
+            if (lines.length > 1) {
+                const keys = lines[0].split(delimiter).map(key => key.trim())
+                lines.slice(1).forEach(line => {
+                    let obj = {}
+                    line.split(delimiter)
+                        .map(value => value.trim())
+                        .forEach((value, i) => obj[keys[i]] = value)      
+                    objArray.push(obj)
+                })
+            }
+            return objArray
         },
         toGeoJSON(data, coordsMap) {
             const times = {}
-            data.forEach(rec => {
-                const dateStr = this.asDateString(rec.Date.id)
-                if (!times[rec.QID.id]) times[rec.QID.id] = []
-                times[rec.QID.id].push(dateStr)
+            data.forEach(item => {
+                const dateStr = this.asDateString(item.date)
+                if (!times[item.qid]) times[item.qid] = []
+                times[item.qid].push(dateStr)
             })
             const added = new Set()
             const geoJSON = { type: 'FeatureCollection', features: [] }
-            this.data.forEach(rec => {
-                const qid = rec.QID.id
-                const label = rec.Location.id
+            data.forEach(item => {
+                const qid = item.qid
+                const label = item.label
                 const coordinates = coordsMap[qid]
                 if (coordinates && !added.has(qid)) {
                     added.add(qid)
