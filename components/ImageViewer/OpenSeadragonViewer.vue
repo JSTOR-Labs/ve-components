@@ -14,7 +14,7 @@
 </template>
 
 <script>
-/* global OpenSeadragon, _ */
+/* global OpenSeadragon, _, sjcl */
 
 const annosEndpoint = 'https://annotations.visual-essays.app/ve/'
 const dependencies = [
@@ -125,7 +125,6 @@ module.exports = {
           //preserveImageSizeOnResize: false,
           //autoResize: false
         })
-        const self = this
         // this.viewer.viewport.goHome = function(immediately) { if (this.viewer) this.viewer.raiseEvent('home', { immediately: immediately }) }
         this.addAnnotatorToggleButton()
         this.viewer.addHandler('home', (e) => {
@@ -194,7 +193,7 @@ module.exports = {
       immediately = immediately || false
       if (this.viewer) this.viewer.viewport.goHome(immediately)
     },
-    viewportChange: _.debounce(function (e) {
+    viewportChange: _.debounce(function () {
       const bottomOverlay = document.getElementById('bottom-overlay')
       if (bottomOverlay) bottomOverlay.innerHTML = this.imageViewportCoords()
     }, 100),
@@ -211,7 +210,7 @@ module.exports = {
       this.viewer.buttons.buttons.push(customButton)
       this.viewer.buttons.element.appendChild(customButton.element)
     },
-    toggleAnnotatorEnabled(e) {
+    toggleAnnotatorEnabled() {
      this.annotatorEnabled = !this.annotatorEnabled
     },
     newPage(e) {
@@ -460,7 +459,7 @@ module.exports = {
         console.log('currentItem', current, previous)
         if (current && (!previous || current['@id'] !== previous['@id'])) {
           this.loadAnnotations()
-          .then(annos => this.initAnnotator())
+          .then(() => this.initAnnotator())
         }
       },
       immediate: true
