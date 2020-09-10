@@ -75,12 +75,12 @@
         // data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/graphs/corpse_flower.tsv',
         data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/geojson/corpse_flower_bloom.json',
         'time-dimension': 'true',
+        'time-interval': '1888/',
         basemap: 'Esri_WorldGrayCanvas',
         'max-zoom': '4',
-        'time-interval': '1888-01-01/P1Y',
         'date-format': 'YYYY',
-        'auto-play': 'true',
-        'auto-fit': 'true',
+        'auto-play': 'false',
+        'auto-fit': 'false',
         fps: '4'
     }]}
 

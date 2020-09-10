@@ -102,9 +102,12 @@ module.exports = {
 
             if (this.timeDimension) {
                 let timeDimension = new L.TimeDimension({
+                    // times: [],
                     timeInterval: this.timeInterval,
+                    timeDimensionControl: true,
                     period: this.period,
-                    addlastPoint: true
+                    // validTimeRange: undefined,
+                    // currentTime: undefined
                 })
                 map.timeDimension = timeDimension
 
@@ -154,10 +157,13 @@ module.exports = {
                 })
                 if (this.timeDimension) {
                     let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
-                        updateTimeDimension: true,
+                        timeDimension: map.timeDimension,
                         duration: this.duration,
+                        // waitForReady: true,
+                        updateTimeDimension: true,
                         updateTimeDimensionMode: 'replace',
-                        addlastPoint: true
+                        // addlastPoint: false,
+                        // updateCurrentTime: true
                     })
                     geoJSONTDLayer.addTo(map)
                 } else {
@@ -227,23 +233,16 @@ module.exports = {
             return objArray
         },
         objArraytoGeoJSON(objArray, coordsMap) {
-            const times = {}
-            objArray.forEach(item => {
-                const date = moment(item.date ? item.date : moment().format('YYYY-MM-DD'))
-                if (!times[item.qid]) times[item.qid] = []
-                times[item.qid].push(date)
-            })
-            const added = new Set()
             const geoJSON = { type: 'FeatureCollection', features: [] }
             objArray.forEach(item => {
                 const qid = item.qid
                 const label = item.label
                 const coordinates = coordsMap[qid]
-                if (coordinates && !added.has(qid)) {
-                    added.add(qid)
+                const time = moment(item.date ? item.date : moment().format('YYYY-MM-DD'))
+                if (coordinates) {
                     geoJSON.features.push({
                         type: 'Feature',
-                        properties: { label, qid, times: times[qid] },
+                        properties: { label, qid, time },
                         geometry: { type: 'Point', coordinates }
                     })
                 }
