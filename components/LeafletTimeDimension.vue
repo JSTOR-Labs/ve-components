@@ -65,7 +65,7 @@ module.exports = {
         map: undefined,
         popups: {},
         labelsLayer: undefined,
-        layerCoords: []
+        features: []
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
@@ -124,12 +124,11 @@ module.exports = {
                 })
                 this.map.on('layeradd', e => {
                     if (e.layer.feature) {
-                        // console.log('layeradd', e.layer)
                         if (e.layer.feature) {
                             if (e.layer.feature.properties.label) {
                                 this.addPopup(e.layer.feature.properties.qid, e.layer.feature.properties.label, e.layer.getLatLng())
                             }
-                            this.layerCoords.push(e.layer.feature.geometry.coordinates)
+                            this.features.push(e.layer.feature)
                             this.layersUpdated()
                         }
                     }
@@ -315,14 +314,15 @@ module.exports = {
             console.log(this.popups)
             this.labelsLayer.clearLayers()
             console.log(`labels=${this.labelsLayer.getLayers().length}`)
-            // Object.values(this.popups).forEach(popup => {
-                // if (!this.labelsLayer.hasLayer(popup)) this.labelsLayer.addLayer(popup)
-            // })
+            this.features.map(feature => this.popups[feature.properties.qid]).forEach(popup => {
+                if (!this.labelsLayer.hasLayer(popup)) this.labelsLayer.addLayer(popup)
+            })
             console.log(`labels=${this.labelsLayer.getLayers().length}`)
             if (this.autoFit) {
-                this.map.fitBounds(this.layerCoords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
+                const coords = this.features.map(feature => feature.geometry.coordinates)
+                this.map.fitBounds(coords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
             }
-            this.layerCoords = []
+            this.features = []
         }, 100),
         setHoverItemID(itemID) {
             this.$emit('hover-id', itemID)
