@@ -6,7 +6,13 @@
             </ul>
         </div>
         <div id="app" :style="containerStyle">
-            <component v-bind:is="component" :items="configs[component]" :width="width" :height="height" />
+            <component v-bind:is="component" :items="configs[component]" 
+                :width="width" :height="height" 
+                :hoverItemID="hoverItemID"
+                :selectedItemID="selectedItemID"
+                @hover-id="hoverItemID = $event"
+                @selected-id="selectedItemID = $event"
+            />
         </div>
     </v-app>
 </template>
@@ -108,7 +114,9 @@
       component,
       configs,
       height: 0,
-      width: 0
+      width: 0,
+      hoverItemID: undefined,
+      selectedItemID: undefined,
     }),
     computed: {
         containerStyle() { return { width: `${this.width}px`, height: `${this.height}px` } }

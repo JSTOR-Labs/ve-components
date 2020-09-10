@@ -56,6 +56,8 @@ module.exports = {
         items: Array,
         width: Number,
         height: Number,
+        hoverItemID: String,
+        selectedItemID: String
     },
     data: () => ({
         map: undefined,
@@ -294,7 +296,13 @@ module.exports = {
                 this.map.fitBounds(this.layerCoords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
             }
             this.layerCoords = []
-        }, 100)
+        }, 100),
+        setHoverItemID(itemID) {
+            this.$emit('hover-id', itemID)
+        },
+        setSelectedItemID(itemID) {
+            this.$emit('selected-id', itemID)
+        }
     },
     watch: {
         mapDef: {
@@ -302,7 +310,19 @@ module.exports = {
                 this.syncLayers()
             },
             immediate: false
-        }
+        },
+        selectedItemID: {
+            handler: function (itemID) {
+                console.log(`map.watch.selectedItemID=${itemID}`)
+            },
+            immediate: true
+        },
+        hoverItemID: {
+            handler: function (itemID) {
+                console.log(`map.watch.hoverItemID=${itemID}`)
+            },
+            immediate: true
+        },
     }
 }
 </script>
