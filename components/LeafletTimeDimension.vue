@@ -48,6 +48,8 @@ const defaults = {
         duration: 'P1Y', // see https://en.wikipedia.org/wiki/ISO_8601#Durations
         autoFit: false,
         dateFormat: 'YYYY-MM-DD', // refer to https://momentjs.com/docs/#/displaying/
+    // other defaults
+      popupOptions: { autoClose: false, closeButton: false, closeOnClick: false }
 }
 
 module.exports = {
@@ -61,6 +63,8 @@ module.exports = {
     },
     data: () => ({
         map: undefined,
+        popups: {},
+        labelsLayer: undefined,
         layerCoords: []
     }),
     computed: {
@@ -105,6 +109,7 @@ module.exports = {
                 this.map = undefined
             }
             if (!this.map) {
+                this.labelsLayer = L.layerGroup()
                 this.map = L.map('map', {
                     center: this.center,
                     zoom: this.zoom,
@@ -112,7 +117,22 @@ module.exports = {
                     maxZoom: this.maxZoom,
                     fullscreenControl: true,
                     preferCanvas: true,
-                    layers: [L.tileLayer(...baseLayers[this.baseLayer])]
+                    layers: [
+                        L.tileLayer(...baseLayers[this.baseLayer]),
+                        this.labelsLayer
+                    ]
+                })
+                this.map.on('layeradd', e => {
+                    if (e.layer.feature) {
+                        // console.log('layeradd', e.layer)
+                        if (e.layer.feature) {
+                            if (e.layer.feature.properties.label) {
+                                this.addPopup(e.layer.feature.properties.qid, e.layer.feature.properties.label, e.layer.getLatLng())
+                            }
+                            this.layerCoords.push(e.layer.feature.geometry.coordinates)
+                            this.layersUpdated()
+                        }
+                    }
                 })
 
                 if (this.timeDimension) {
@@ -151,12 +171,6 @@ module.exports = {
                     }
                     this.map.addControl(timeDimensionControl)
 
-                    this.map.on('layeradd', e => {
-                        if (e.layer.feature) {
-                            this.layerCoords.push(e.layer.feature.geometry.coordinates)
-                            this.layersUpdated()
-                        }
-                    })
                 }
             }
         },
@@ -188,14 +202,11 @@ module.exports = {
         },
         geoJSONLayer(geoJSON) {
             return L.geoJSON(geoJSON, {
-                pointToLayer: function (feature, latLng) {
+                pointToLayer: (feature, latLng) => {
                     const marker = L.circleMarker(latLng, {
                         radius: 4,
                         fillOpacity: 1                        
                     })
-                    if (feature.properties.label) {
-                        marker.bindPopup(feature.properties.label)
-                    }
                     return marker
                 }
             })
@@ -291,7 +302,23 @@ module.exports = {
             let year = s.match(/\d{4}/)
             return `${year ? year[0] : (new Date()).getFullYear()}-01-01 00:00:00`
         },
+        addPopup(id, label, latLng, offset) {
+            if (!this.popups[id]) {
+                const popup = L.popup({ ...defaults.popupOptions, ...{ offset: L.point(0, offset || 0)}})
+                popup.setLatLng(latLng)
+                popup.setContent(`<h1 data-eid="${id}">${label}</h1>`)
+                popup.options.id = id
+                this.popups[id] = popup
+            }
+        },
         layersUpdated: _.debounce(function () {
+            console.log(this.popups)
+            this.labelsLayer.clearLayers()
+            console.log(`labels=${this.labelsLayer.getLayers().length}`)
+            // Object.values(this.popups).forEach(popup => {
+                // if (!this.labelsLayer.hasLayer(popup)) this.labelsLayer.addLayer(popup)
+            // })
+            console.log(`labels=${this.labelsLayer.getLayers().length}`)
             if (this.autoFit) {
                 this.map.fitBounds(this.layerCoords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
             }
