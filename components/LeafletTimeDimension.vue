@@ -201,7 +201,12 @@ module.exports = {
         },
         geoJSONLayer(geoJSON) {
             return L.geoJSON(geoJSON, {
+                onEachFeature: (feature, layer) => {
+                    console.log('onEachFeature', feature.properties.qid)
+                    this.addEventHandlers(layer, layer.feature.properties.qid)
+                },
                 pointToLayer: (feature, latLng) => {
+                    console.log(feature.properties.qid)
                     const marker = L.circleMarker(latLng, {
                         radius: 4,
                         fillOpacity: 1                        
@@ -310,14 +315,19 @@ module.exports = {
                 this.popups[id] = popup
             }
         },
+        addEventHandlers(elem, itemId) {
+            console.log(elem)
+            elem.on('click', () => { this.setSelectedItemID(itemId) })
+            elem.on('mouseover', () => { this.setHoverItemID(itemId) })
+            elem.on('mouseout', () => { this.setHoverItemID() })
+        },
         layersUpdated: _.debounce(function () {
-            console.log(this.popups)
+            /*
             this.labelsLayer.clearLayers()
-            console.log(`labels=${this.labelsLayer.getLayers().length}`)
             this.features.map(feature => this.popups[feature.properties.qid]).forEach(popup => {
                 if (!this.labelsLayer.hasLayer(popup)) this.labelsLayer.addLayer(popup)
             })
-            console.log(`labels=${this.labelsLayer.getLayers().length}`)
+            */
             if (this.autoFit) {
                 const coords = this.features.map(feature => feature.geometry.coordinates)
                 this.map.fitBounds(coords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
@@ -345,7 +355,15 @@ module.exports = {
             immediate: true
         },
         hoverItemID: {
-            handler: function (itemID) {
+            handler: function (itemID, prior) {
+                console.log(`hover" itemID=${itemID} prior=${prior}`)
+                console.log(this.popups)
+                if (prior) {
+                    this.map.closePopup(this.popups[prior])
+                }
+                if (itemID) {
+                    this.map.openPopup(this.popups[itemID])
+                }
                 console.log(`map.watch.hoverItemID=${itemID}`)
             },
             immediate: true
