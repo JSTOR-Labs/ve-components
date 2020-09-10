@@ -116,7 +116,7 @@ module.exports = {
                     zoomSnap: 0.1,
                     maxZoom: this.maxZoom,
                     fullscreenControl: true,
-                    preferCanvas: true,
+                    preferCanvas: false,
                     layers: [
                         L.tileLayer(...baseLayers[this.baseLayer]),
                         this.labelsLayer
