@@ -43,9 +43,9 @@ const defaults = {
         autoPlay: false,
         loop: false,
         fps: 1,
-        timeInterval: '/P1Y',
+        timeInterval: '/P1Y', // see https://en.wikipedia.org/wiki/ISO_8601#Time_intervals
         period: 'P1Y',
-        duration: 'P1Y',
+        duration: 'P1Y', // see https://en.wikipedia.org/wiki/ISO_8601#Durations
         autoFit: false,
         dateFormat: 'YYYY-MM-DD', // refer to https://momentjs.com/docs/#/displaying/
 }
@@ -58,24 +58,26 @@ module.exports = {
         height: Number,
     },
     data: () => ({
+        map: undefined,
         layerCoords: []
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
-        data() { return this.item.data },
-        baseLayer() { return this.item.basemap || defaults.baseLayer },
-        center() { return this.item.center || defaults.center },
-        zoom() { return this.item.zoom || defaults.zoom },
-        maxZoom() { return this.item['max-zoom'] || defaults.maxZoom },
-        timeDimension() { return this.item['time-dimension'] === 'true' || defaults.timeDimension },
-        autoPlay() { return this.item['auto-play'] === 'true' || defaults.autoPlay },
-        loop() { return this.item.loop === 'true' || defaults.loop },
-        fps() { return this.item.fps || defaults.fps },
-        timeInterval() { return this.item['time-interval'] || defaults.timeInterval },
-        period() { return this.item.period || defaults.period },
-        duration() { return this.item.duration || defaults.duration },
-        autoFit() { return this.item['auto-fit'] === 'true' || defaults.autoFit },
-        dateFormat() { return this.item['date-format'] || defaults.dateFormat },
+        mapDef() { return this.item },
+        data() { return this.mapDef.data },
+        baseLayer() { return this.mapDef.basemap || defaults.baseLayer },
+        center() { return this.mapDef.center || defaults.center },
+        zoom() { return this.mapDef.zoom || defaults.zoom },
+        maxZoom() { return this.mapDef['max-zoom'] || defaults.maxZoom },
+        timeDimension() { return this.mapDef['time-dimension'] === 'true' || defaults.timeDimension },
+        autoPlay() { return this.mapDef['auto-play'] === 'true' || defaults.autoPlay },
+        loop() { return this.mapDef.loop === 'true' || defaults.loop },
+        fps() { return this.mapDef.fps || defaults.fps },
+        timeInterval() { return this.mapDef['time-interval'] || defaults.timeInterval },
+        period() { return this.mapDef.period || defaults.period },
+        duration() { return this.mapDef.duration || defaults.duration },
+        autoFit() { return this.mapDef['auto-fit'] === 'true' || defaults.autoFit },
+        dateFormat() { return this.mapDef['date-format'] || defaults.dateFormat },
         containerStyle() {
             return {
                 width: `${this.width}px`,
@@ -86,90 +88,124 @@ module.exports = {
         }
   },
   mounted() {
-        console.log(this.$options.name, this.items)
         this.loadDependencies(dependencies, 0, this.init)
   },
   methods: {
         init() {
-            let map = L.map('map', {
-                center: this.center,
-                zoom: this.zoom,
-                zoomSnap: 0.1,
-                maxZoom: this.maxZoom,
-                fullscreenControl: true,
-                layers: [L.tileLayer(...baseLayers[this.baseLayer])]
-            })
-
-            if (this.timeDimension) {
-                let timeDimension = new L.TimeDimension({
-                    // times: [],
-                    timeInterval: this.timeInterval,
-                    timeDimensionControl: true,
-                    period: this.period,
-                    // validTimeRange: undefined,
-                    // currentTime: undefined
-                })
-                map.timeDimension = timeDimension
-
-                let player = new L.TimeDimension.Player({
-                    transitionTime: 1000/this.fps,
-                    loop:      this.loop,
-                    startOver: true
-                }, timeDimension)
-
-                let timeDimensionControlOptions = {
-                    timeSliderDragUpdate: true,
-                    loopButton:    true,
-                    autoPlay:      this.autoPlay,
-                    player:        player,
-                    timeDimension: timeDimension,
-                    position:      'bottomleft',
-                    minSpeed:      1,
-                    speedStep:     0.5,
-                    maxSpeed:      15
-                }
-
-                let timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions)
-                // override L.Control.TimeDimension_getDisplayDateFormat for custom date formatting
-                timeDimensionControl._getDisplayDateFormat = (date) => {
-                    return moment(date).format(this.dateFormat)
-                }
-                map.addControl(timeDimensionControl)
-
-                map.on('layeradd', e => {
-                    if (e.layer.feature) {
-                        this.layerCoords.push(e.layer.feature.geometry.coordinates)
-                        this.layersUpdated(map)
-                    }
-                })
+            console.log(this.$options.name, this.mapDef)
+            this.createMap()
+            this.syncLayers()
+        },
+        createMap(reload) {
+            if (reload && this.map) {
+                this.map.off()
+                this.map.remove()
+                this.map = undefined
             }
+            if (!this.map) {
+                this.map = L.map('map', {
+                    center: this.center,
+                    zoom: this.zoom,
+                    zoomSnap: 0.1,
+                    maxZoom: this.maxZoom,
+                    fullscreenControl: true,
+                    preferCanvas: true,
+                    layers: [L.tileLayer(...baseLayers[this.baseLayer])]
+                })
 
-            this.getGeoJSON(this.data)
-            .then(geoJSON => {
-                // console.log(JSON.stringify(geoJSON, null, 2))
-                let geoJSONLayer = L.geoJSON(geoJSON, {
-                    pointToLayer: function (feature, latLng) {
-                        return L.circleMarker(latLng, {
-                            radius: 4,
-                            fillOpacity: 1
+                if (this.timeDimension) {
+                    let timeDimension = new L.TimeDimension({
+                        // times: [],
+                        timeInterval: this.timeInterval,
+                        timeDimensionControl: true,
+                        period: this.period,
+                        // validTimeRange: undefined,
+                        // currentTime: undefined
+                    })
+                    this.map.timeDimension = timeDimension
+
+                    let player = new L.TimeDimension.Player({
+                        transitionTime: 1000/this.fps,
+                        loop:           this.loop,
+                        startOver:      true
+                    }, timeDimension)
+
+                    let timeDimensionControlOptions = {
+                        timeSliderDragUpdate: true,
+                        loopButton:    true,
+                        autoPlay:      this.autoPlay,
+                        player:        player,
+                        timeDimension: timeDimension,
+                        position:      'bottomleft',
+                        minSpeed:      1,
+                        speedStep:     0.5,
+                        maxSpeed:      15
+                    }
+
+                    let timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions)
+                    // override L.Control.TimeDimension_getDisplayDateFormat for custom date formatting
+                    timeDimensionControl._getDisplayDateFormat = (date) => {
+                        return moment(date).format(this.dateFormat)
+                    }
+                    this.map.addControl(timeDimensionControl)
+
+                    this.map.on('layeradd', e => {
+                        if (e.layer.feature) {
+                            this.layerCoords.push(e.layer.feature.geometry.coordinates)
+                            this.layersUpdated()
+                        }
+                    })
+                }
+            }
+        },
+        syncLayers() {
+            const geoJSONLayerDefs = []
+            if (this.mapDef.data) {
+                geoJSONLayerDefs.push({url: this.mapDef.data})
+            }
+            this.syncGeoJSONLayers(geoJSONLayerDefs)
+        },
+        syncGeoJSONLayers(layerDefs) {
+            layerDefs.forEach(def => {
+                this.getGeoJSON(def.url)
+                .then(geoJSON => {
+                    // console.log(JSON.stringify(geoJSON, null, 2))
+                    let geoJSONLayer = this.geoJSONLayer(geoJSON)
+                    if (this.timeDimension) {
+                        geoJSONLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
+                            timeDimension: this.map.timeDimension,
+                            duration: this.duration,
+                            // waitForReady: true,
+                            updateTimeDimension: true,
+                            updateTimeDimensionMode: 'replace',
                         })
                     }
+                    geoJSONLayer.addTo(this.map)
                 })
-                if (this.timeDimension) {
-                    let geoJSONTDLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
-                        timeDimension: map.timeDimension,
-                        duration: this.duration,
-                        // waitForReady: true,
-                        updateTimeDimension: true,
-                        updateTimeDimensionMode: 'replace',
-                        // addlastPoint: false,
-                        // updateCurrentTime: true
+            })
+        },
+        geoJSONLayer(geoJSON) {
+            return L.geoJSON(geoJSON, {
+                pointToLayer: function (feature, latLng) {
+                    const marker = L.circleMarker(latLng, {
+                        radius: 4,
+                        fillOpacity: 1                        
                     })
-                    geoJSONTDLayer.addTo(map)
-                } else {
-                    geoJSONLayer.addTo(map)
+                    if (feature.properties.label) {
+                        marker.bindPopup(feature.properties.label)
+                    }
+                    return marker
                 }
             })
+        },
+        cachedGeoJSON(url) {
+            if (!window.geojsonCache) {
+                window.geojsonCache = {}
+            }
+            if (!window.geojsonCache[url]) {
+                window.geojsonCache[url] = fetch(url).then(resp => resp.json())
+            }
+            return window.geojsonCache[url]
         },
         async getGeoJSON(url) {
             const inputType = url.split('.').pop()
@@ -177,8 +213,7 @@ module.exports = {
             if (inputType === 'tsv' || inputType === 'csv') {
                 geoJSON = await this.delimitedDataToGeoJSON(url)
             } else {
-                let resp = await fetch(url)
-                geoJSON = await resp.json()
+                geoJSON = await this.cachedGeoJSON(url)
             }
             return geoJSON
         },
@@ -254,12 +289,20 @@ module.exports = {
             let year = s.match(/\d{4}/)
             return `${year ? year[0] : (new Date()).getFullYear()}-01-01 00:00:00`
         },
-        layersUpdated: _.debounce(function (map) {
+        layersUpdated: _.debounce(function () {
             if (this.autoFit) {
-                map.fitBounds(this.layerCoords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
+                this.map.fitBounds(this.layerCoords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
             }
             this.layerCoords = []
         }, 100)
+    },
+    watch: {
+        mapDef: {
+            handler: function () {
+                this.syncLayers()
+            },
+            immediate: false
+        }
     }
 }
 </script>
