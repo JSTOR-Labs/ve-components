@@ -55,7 +55,8 @@ const defaults = {
 module.exports = {
     name: "LeafletTimeDimension",
     props: {
-        items: Array,
+        items: { type: Array, default: () => ([]) },
+        itemsInActiveElements: { type: Array, default: () => ([]) },
         width: Number,
         height: Number,
         hoverItemID: String,
@@ -116,7 +117,7 @@ module.exports = {
                     zoomSnap: 0.1,
                     maxZoom: this.maxZoom,
                     fullscreenControl: true,
-                    preferCanvas: true,
+                    preferCanvas: false,
                     layers: [
                         L.tileLayer(...baseLayers[this.baseLayer]),
                         this.labelsLayer
@@ -174,39 +175,47 @@ module.exports = {
             }
         },
         syncLayers() {
-            const geoJSONLayerDefs = []
-            if (this.mapDef.data) {
-                geoJSONLayerDefs.push({url: this.mapDef.data})
-            }
-            this.syncGeoJSONLayers(geoJSONLayerDefs)
+            this.syncGeoJSONLayers()
         },
-        syncGeoJSONLayers(layerDefs) {
-            layerDefs.forEach(def => {
-                this.getGeoJSON(def.url)
-                .then(geoJSON => {
-                    // console.log(JSON.stringify(geoJSON, null, 2))
-                    let geoJSONLayer = this.geoJSONLayer(geoJSON)
-                    if (this.timeDimension) {
-                        geoJSONLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
-                            timeDimension: this.map.timeDimension,
-                            duration: this.duration,
-                            // waitForReady: true,
-                            updateTimeDimension: true,
-                            updateTimeDimensionMode: 'replace',
-                        })
-                    }
-                    geoJSONLayer.addTo(this.map)
+        syncGeoJSONLayers() {
+            if (this.mapDef.data) {
+                this.getGeoJSON(this.mapDef.data)
+                .then(geoJSON => this.addGeoJSONLayer(geoJSON))
+            } else {
+                if (this.mapDef.layers) {
+                    const geoJSONUrls = this.mapDef.layers
+                        .filter(item => item.geojson || item.url)
+                        .map(item => item.geojson || item.url)
+                    geoJSONUrls.forEach(url => {
+                        this.getGeoJSON(url)
+                        .then(geoJSON => this.addGeoJSONLayer(geoJSON))
+                    })
+                }
+                if (this.itemsInActiveElements) {
+                    this.addGeoJSONLayer(this.itemsInActiveElementsToGeoJSON(this.itemsInActiveElements))
+                }
+
+            }
+        },
+        addGeoJSONLayer(geoJSON) {
+            let geoJSONLayer = this.geoJSONLayer(geoJSON)
+            if (this.timeDimension) {
+                geoJSONLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
+                    timeDimension: this.map.timeDimension,
+                    duration: this.duration,
+                    // waitForReady: true,
+                    updateTimeDimension: true,
+                    updateTimeDimensionMode: 'replace',
                 })
-            })
+            }
+            geoJSONLayer.addTo(this.map)
         },
         geoJSONLayer(geoJSON) {
             return L.geoJSON(geoJSON, {
                 onEachFeature: (feature, layer) => {
-                    console.log('onEachFeature', feature.properties.qid)
                     this.addEventHandlers(layer, layer.feature.properties.qid)
                 },
                 pointToLayer: (feature, latLng) => {
-                    console.log(feature.properties.qid)
                     const marker = L.circleMarker(latLng, {
                         radius: 4,
                         fillOpacity: 1                        
@@ -301,6 +310,18 @@ module.exports = {
             })
             return geoJSON
         },
+        itemsInActiveElementsToGeoJSON(items) {
+            const geoJSON = { type: 'FeatureCollection', features: [] }
+            items.filter(item => item.coords)
+            .forEach(item => {
+                geoJSON.features.push({
+                    type: 'Feature',
+                    properties: item,
+                    geometry: { type: 'Point', coordinates: [item.coords[0][1], item.coords[0][0]] }
+                })
+            })
+            return geoJSON
+        },
         asDateString(s) {
             // TODO: improve date parsing
             let year = s.match(/\d{4}/)
@@ -315,11 +336,10 @@ module.exports = {
                 this.popups[id] = popup
             }
         },
-        addEventHandlers(elem, itemId) {
-            console.log(elem)
-            elem.on('click', () => { this.setSelectedItemID(itemId) })
-            elem.on('mouseover', () => { this.setHoverItemID(itemId) })
-            elem.on('mouseout', () => { this.setHoverItemID() })
+        addEventHandlers(layer, itemId) {
+            layer.on('click', () => { this.setSelectedItemID(itemId) })
+            layer.on('mouseover', () => { this.setHoverItemID(itemId) })
+            layer.on('mouseout', () => { this.setHoverItemID() })
         },
         layersUpdated: _.debounce(function () {
             /*
@@ -345,6 +365,15 @@ module.exports = {
         mapDef: {
             handler: function () {
                 this.syncLayers()
+            },
+            immediate: false
+        },
+        itemsInActiveElements: {
+            handler: function (itemsInActiveElements) {
+                console.log('map.watch.itemsInActiveElements',  itemsInActiveElements)
+                if (itemsInActiveElements) {
+                    this.addGeoJSONLayer(this.itemsInActiveElementsToGeoJSON(itemsInActiveElements))
+                }
             },
             immediate: false
         },
