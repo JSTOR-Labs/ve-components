@@ -145,26 +145,6 @@
           scrollableContent.scrollTo(0, scrollableContent.scrollTop - wheelDelta)
         }
       }
-    },
-    watch: {
-      essayConfigLoaded: {
-        handler: (essayConfigLoaded) => {
-          console.log('essayConfigLoaded', this.essayConfig, this.siteConfig)
-        },
-        immediate: true
-      },
-      banner: {
-        handler: (banner) => {
-          console.log('banner', banner)
-        },
-        immediate: true
-      },
-      bannerHeight: {
-        handler: (bannerHeight) => {
-          console.log('bannerHeight', bannerHeight)
-        },
-        immediate: true
-      }
     }
   }
 </script>
