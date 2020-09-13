@@ -153,6 +153,12 @@
         },
         immediate: true
       },
+      banner: {
+        handler: (banner) => {
+          console.log('banner', banner)
+        },
+        immediate: true
+      },
       bannerHeight: {
         handler: (bannerHeight) => {
           console.log('bannerHeight', bannerHeight)
