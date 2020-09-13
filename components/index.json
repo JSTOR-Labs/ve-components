@@ -18,5 +18,6 @@
     { "name": "visNetwork", "src": "/components/VisNetwork.vue", "selectors": ["tag:vis-network"], "icon": "fa-chart-network", "label": "Networks"},
     { "name": "timeSelector", "src": "/components/TimeSelector.vue"},
     { "name": "entityInfobox", "src": "/components/EntityInfobox.vue"},
-    { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"}
+    { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"},
+    { "name": "leafletTimeDimension", "src": "/components/LeafletTimeDimension.vue", "selectors": ["tag:ltd"], "icon": "fa-analytics", "label": "Leaflet Time Dimension"}
 ]
