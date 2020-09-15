@@ -38,7 +38,7 @@ module.exports = {
     playerWidth: 564
   }),
   computed: {
-    videoId() { return this.items[0].id },
+    videoId() { return this.items[0].vid },
     player() { return this.$refs.youtube ? this.$refs.youtube.player : null }
   },
   mounted() {
