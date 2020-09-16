@@ -31,6 +31,7 @@ module.exports = {
     }
   },
   mounted() {
+    console.log(`${this.$options.name}.mounted`)
     this.$store.dispatch('setProgress', 0)
     this.groupItems(this.allItems, this.$store.getters.componentSelectors)
     this.$nextTick(() => this.init())
