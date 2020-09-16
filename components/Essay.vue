@@ -3,7 +3,6 @@
 </template>
 
 <script>
-/* global groupItems, elemIdPath, itemsInElements, eqSet */
 
 module.exports = {
   name: 'essay',
@@ -34,7 +33,7 @@ module.exports = {
   mounted() {
     console.log('Essay.mounted', this)
     this.$store.dispatch('setProgress', 0)
-    groupItems(this.allItems, this.$store.getters.componentSelectors)
+    this.groupItems(this.allItems, this.$store.getters.componentSelectors)
     this.$nextTick(() => this.init())
     if (window.location.hash) {
       this.scrollTo(window.location.hash.slice(1))
@@ -52,8 +51,8 @@ module.exports = {
         if (!first) {
           first = para.id
         }
-        para.title = elemIdPath(para.id).join(',')
-        const itemsInPara = itemsInElements(elemIdPath(para.id), this.allItems)
+        para.title = this.elemIdPath(para.id).join(',')
+        const itemsInPara = this.itemsInElements(this.elemIdPath(para.id), this.allItems)
         let scrollTop = para.offsetTop
         let elem = para
         while (elem.parentElement && elem.id !== 'essay') {
@@ -99,8 +98,8 @@ module.exports = {
     },
     setActiveElements(elemId) {
       if (elemId) {
-        const newActiveElements = elemIdPath(elemId)
-        if (newActiveElements.length > 0 && !eqSet(new Set(this.activeElements), new Set(newActiveElements))) {
+        const newActiveElements = this.elemIdPath(elemId)
+        if (newActiveElements.length > 0 && !this.eqSet(new Set(this.activeElements), new Set(newActiveElements))) {
           if (document.getElementById('triangle')) {
             document.getElementById('triangle').remove();
           }
