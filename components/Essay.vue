@@ -5,7 +5,7 @@
 <script>
 /* global */
 
-export default {
+module.exports = {
   name: 'essay',
   data: () => ({
     paragraphs: {},
