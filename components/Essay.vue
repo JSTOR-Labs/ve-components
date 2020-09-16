@@ -3,7 +3,7 @@
 </template>
 
 <script>
-/* global */
+/* global groupItems, elemIdPath, itemsInElements, eqSet */
 
 export default {
   name: 'essay',
@@ -80,11 +80,11 @@ export default {
           triggerElement: `#${para.id}`,
           triggerHook: this.triggerHook,
         })
-        .on('enter', (e) => {
+        .on('enter', () => {
           // console.log(`enter=${para.id}`)
           this.setActiveElements(para.id)
         })
-        .on('leave', (e) => {
+        .on('leave', () => {
           // console.log(`leave=${this.paragraphs[para.id].prior}`)
           this.setActiveElements(this.paragraphs[para.id].prior)
         })
@@ -183,6 +183,7 @@ export default {
         window.scrollTo(0, elem.offsetTop)
       }
     },
+    /*
     addFootnotesHover() {
       document.querySelectorAll('.footnote-ref').forEach((fn) => {
         fn.addEventListener('mouseover', (e) => {
@@ -192,6 +193,7 @@ export default {
         })
       })
     },
+    */
     linkTaggedItems() {
       document.querySelectorAll('.tagged').forEach((item) => {
         item.addEventListener('click', (e) => {
