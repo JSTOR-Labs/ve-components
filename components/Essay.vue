@@ -32,7 +32,7 @@ module.exports = {
     }
   },
   mounted() {
-    console.log('Essay.mounted')
+    console.log('Essay.mounted', this)
     this.$store.dispatch('setProgress', 0)
     groupItems(this.allItems, this.$store.getters.componentSelectors)
     this.$nextTick(() => this.init())
