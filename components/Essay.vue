@@ -31,7 +31,6 @@ module.exports = {
     }
   },
   mounted() {
-    console.log('Essay.mounted', this)
     this.$store.dispatch('setProgress', 0)
     this.groupItems(this.allItems, this.$store.getters.componentSelectors)
     this.$nextTick(() => this.init())
