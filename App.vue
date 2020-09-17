@@ -82,6 +82,24 @@
         items: [
             {
                 id: 'item-0',
+                data: 'data/cities.json',
+                'time-dimension': 'true',
+                'time-interval': '-008000/',
+                'duration': 'P10000Y',
+                basemap: 'Esri_WorldGrayCanvas',
+                'max-zoom': '4',
+                'date-format': 'YYYY',
+                'auto-play': 'false',
+                'auto-fit': 'false',
+                fps: '4'
+            }
+        ],
+    }    
+    /*
+    LeafletTimeDimension: {
+        items: [
+            {
+                id: 'item-0',
                 // data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/graphs/corpse_flower.tsv',
                 data: 'https://raw.githubusercontent.com/JSTOR-Labs/plant-humanities/develop/geojson/corpse_flower_bloom.json',
                 'time-dimension': 'true',
@@ -216,7 +234,7 @@
                 ]
             }
         ]
-    }
+    */
   }
 
   const component = window.location.search.split('component=').pop() || 'LeafletTimeDimension'

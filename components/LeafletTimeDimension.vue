@@ -127,7 +127,7 @@ module.exports = {
                     if (e.layer.feature) {
                         if (e.layer.feature) {
                             if (e.layer.feature.properties.label) {
-                                this.addPopup(e.layer.feature.properties.qid, e.layer.feature.properties.label, e.layer.getLatLng())
+                                this.addPopup(e.layer.feature.properties.qid || e.layer.feature.properties.id, e.layer.feature.properties.label, e.layer.getLatLng())
                             }
                             this.features.push(e.layer.feature)
                             this.layersUpdated()
@@ -213,7 +213,7 @@ module.exports = {
         geoJSONLayer(geoJSON) {
             return L.geoJSON(geoJSON, {
                 onEachFeature: (feature, layer) => {
-                    this.addEventHandlers(layer, layer.feature.properties.qid)
+                    this.addEventHandlers(layer, layer.feature.properties.qid || layer.feature.properties.id)
                 },
                 pointToLayer: (feature, latLng) => {
                     const marker = L.circleMarker(latLng, {
