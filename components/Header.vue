@@ -24,7 +24,7 @@
           </v-list-item>
           -->
           <v-list-item @click="drawer=false; editMarkdown('stackedit')">
-            <v-list-item-action><v-icon>mdi-pencil-outline</v-icon></v-list-item-action>
+            <v-list-item-action v-if="siteConfig.branch !== 'master'"><v-icon>mdi-pencil-outline</v-icon></v-list-item-action>
             <v-list-item-content><v-list-item-title>Edit page</v-list-item-title></v-list-item-content>
           </v-list-item>
           <v-divider></v-divider>
