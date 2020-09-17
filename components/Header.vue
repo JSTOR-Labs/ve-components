@@ -8,6 +8,10 @@
               <v-list-item-action><v-icon>{{menuItem.icon}}</v-icon></v-list-item-action>
               <v-list-item-content><v-list-item-title>{{menuItem.title}}</v-list-item-title></v-list-item-content>
           </v-list-item>
+          <v-list-item @click="drawer=false; login()">
+            <v-list-item-action><v-icon>fa-user</v-icon></v-list-item-action>
+            <v-list-item-content><v-list-item-title>Login</v-list-item-title></v-list-item-content>
+          </v-list-item>
         </v-list>
 
         <v-list dense v-cloak justify-end>
@@ -136,6 +140,9 @@
       },
       editMarkdown(editor) {
         this.$emit('edit-markdown', editor)
+      },
+      login(editor) {
+        this.$emit('login')
       },
       throttle(callback, interval) {
         let enableCall = true
