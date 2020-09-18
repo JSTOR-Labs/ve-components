@@ -11,7 +11,9 @@ const dependencies = [
     'https://cdn.jsdelivr.net/npm/leaflet@1.5.1/dist/leaflet.js',
     'https://cdn.jsdelivr.net/npm/iso8601-js-period@0.2.1/iso8601.min.js',
     'https://cdn.jsdelivr.net/npm/leaflet-timedimension@1.1.1/dist/leaflet.timedimension.min.js',
-    'https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js'
+    'https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js',
+    'https://jstor-labs.github.io/ve-components/public/js/L.Control.Opacity.js',
+    'https://jstor-labs.github.io/ve-components/public/js/leaflet-fa-markers.js'
 ]
 
 // Some leaflet baselayers
@@ -32,9 +34,13 @@ const baseLayers = {
         { attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ', maxZoom: 16 }]
 }
 
+const iconMap = {
+  garden: 'leaf'
+}
+
 const defaults = {
     // Leaflet Map options
-        baseLayer: 'OpenStreetMap',
+        basemap: 'OpenStreetMap',
         center: [25, 0],
         zoom: 2.5,
         maxZoom: 16,
@@ -67,15 +73,22 @@ module.exports = {
         popups: {},
         labelsLayer: undefined,
         features: [],
-        geoJSONLayers: []
+        geoJSONLayers: [],
+        tileLayers: [],
+        timeDimensionControl: undefined,
+        controls: {
+            timeDimension: undefined,
+            layers: undefined,
+            opacity: undefined
+        }
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
         mapDef() { return this.item },
-        showLabels() { return !this.mapDef['hide-labels'] || this.mapDef['hide-labels'] === 'false' },
+        showLabels() { return this.mapDef['show-labels'] && this.mapDef['show-labels'] !== 'false' },
         preferGeoJSON() { return this.mapDef['prefer-geojson'] && this.mapDef['prefer-geojson'] !== 'false' },
         data() { return this.mapDef.data },
-        baseLayer() { return this.mapDef.basemap || defaults.baseLayer },
+        basemap() { return this.mapDef.basemap || defaults.basemap },
         center() { return this.mapDef.center || defaults.center },
         zoom() { return this.mapDef.zoom || defaults.zoom },
         maxZoom() { return this.mapDef['max-zoom'] || defaults.maxZoom },
@@ -92,8 +105,8 @@ module.exports = {
             return {
                 width: `${this.width}px`,
                 height: `${this.height}px`,
-                overflowY: "auto !important",
-                marginLeft: "24px",
+                overflowY: 'auto !important',
+                marginLeft: '0',
             }
         }
   },
@@ -107,7 +120,6 @@ module.exports = {
             this.syncLayers()
         },
         createMap(reload) {
-            console.log(`createMap: reload=${reload}`)
             if (reload && this.map) {
                 this.map.off()
                 this.map.remove()
@@ -115,17 +127,15 @@ module.exports = {
             }
             if (!this.map) {
                 // this.labelsLayer = L.layerGroup()
+                // this.baseLayer = L.tileLayer(...baseLayers[this.basemap])
+                this.tileLayers.basemap = this.basemap
                 this.map = L.map('map', {
                     center: this.center,
                     zoom: this.zoom,
                     zoomSnap: 0.1,
                     maxZoom: this.maxZoom,
                     fullscreenControl: true,
-                    preferCanvas: false,
-                    layers: [
-                        L.tileLayer(...baseLayers[this.baseLayer]),
-                        // this.labelsLayer
-                    ]
+                    preferCanvas: false
                 })
                 this.map.on('layeradd', e => {
                     if (e.layer.feature) {
@@ -135,82 +145,134 @@ module.exports = {
                                 const latLng = featureType === 'Polygon' || featureType === 'MultiPolygon' || featureType === 'LineString'
                                     ? e.layer.getBounds().getCenter()
                                     : e.layer.getLatLng()
-                                this.addPopup(e.layer.feature.properties.qid || e.layer.feature.properties.id, e.layer.feature.properties.label, latLng)
+                                const labelOffset = e.layer.feature.properties['marker-type'] === 'circle' ? -6 : -30
+                                this.addPopup(e.layer.feature.properties.qid || e.layer.feature.properties.id, e.layer.feature.properties.label, latLng, labelOffset)
                             }
                             this.features.push(e.layer.feature)
                             this.layersUpdated()
                         }
                     }
                 })
+            }
+        },
+        addTimeDimension() {
+            // console.log(`timeDimension: timeInterval=${this.timeInterval} period=${this.period} loop=${this.loop} autoPlay=${this.autoPlay} transitionTime=${1000/this.fps}`)
+            let timeDimension = new L.TimeDimension({
+                // times: [],
+                timeInterval: this.timeInterval,
+                timeDimensionControl: true,
+                period: this.period,
+                // validTimeRange: undefined,
+                // currentTime: undefined
+            })
+            this.map.timeDimension = timeDimension
 
-                if (this.timeDimension) {
-                    let timeDimension = new L.TimeDimension({
-                        // times: [],
-                        timeInterval: this.timeInterval,
-                        timeDimensionControl: true,
-                        period: this.period,
-                        // validTimeRange: undefined,
-                        // currentTime: undefined
-                    })
-                    this.map.timeDimension = timeDimension
+            let player = new L.TimeDimension.Player({
+                transitionTime: 1000/this.fps,
+                loop:           this.loop,
+                startOver:      true
+            }, timeDimension)
 
-                    let player = new L.TimeDimension.Player({
-                        transitionTime: 1000/this.fps,
-                        loop:           this.loop,
-                        startOver:      true
-                    }, timeDimension)
+            let timeDimensionControlOptions = {
+                timeSliderDragUpdate: true,
+                loopButton:    true,
+                autoPlay:      this.autoPlay,
+                player:        player,
+                timeDimension: timeDimension,
+                position:      'bottomleft',
+                minSpeed:      1,
+                speedStep:     0.5,
+                maxSpeed:      15
+            }
 
-                    let timeDimensionControlOptions = {
-                        timeSliderDragUpdate: true,
-                        loopButton:    true,
-                        autoPlay:      this.autoPlay,
-                        player:        player,
-                        timeDimension: timeDimension,
-                        position:      'bottomleft',
-                        minSpeed:      1,
-                        speedStep:     0.5,
-                        maxSpeed:      15
-                    }
-
-                    let timeDimensionControl = new L.Control.TimeDimension(timeDimensionControlOptions)
-                    // override L.Control.TimeDimension_getDisplayDateFormat for custom date formatting
-                    timeDimensionControl._getDisplayDateFormat = (date) => {
-                        return moment(date).format(this.dateFormat)
-                    }
-                    this.map.addControl(timeDimensionControl)
-
-                }
+            this.controls.timeDimension = new L.Control.TimeDimension(timeDimensionControlOptions)
+            // override L.Control.TimeDimension_getDisplayDateFormat for custom date formatting
+            this.controls.timeDimension._getDisplayDateFormat = (date) => {
+                return moment(date).format(this.dateFormat)
+            }
+            this.map.addControl(this.controls.timeDimension)
+        },
+        removeTimeDimension() {
+            if (this.map.timeDimension) {
+                this.map.removeControl(this.controls.timeDimension)
+                this.map.timeDimension = undefined
+                this.controls.timeDimension = undefined
             }
         },
         syncLayers() {
-            console.log('syncLayers')
             this.syncGeoJSONLayers()
-            console.log('flyTo')
+            this.syncTileLayers()
             this.map.flyTo(this.mapDef.center || defaults.center, this.mapDef.zoom || defaults.zoom)
         },
+        syncTileLayers() {
+            const mapDefs = {}
+            this.mapDef.layers.filter(layerDef => layerDef.type === 'mapwarper').forEach(layerDef => mapDefs[layerDef['mapwarper-id']] = layerDef)
+            
+            const next = []
+            if (this.tileLayers.length > 0 && this.tileLayers[0].id === this.basemap) {
+                next.push(this.tileLayers[0])
+                this.tileLayers.slice(1).forEach(layer => {
+                    if (mapDefs[layer.id]) {
+                        next.push(layer)
+                    } else {
+                        this.map.removeLayer(layer.layer)
+                    }
+                })
+            } else {
+                this.tileLayers.forEach(layer => {
+                    this.map.removeLayer(layer.layer)
+                })
+                const baseLayer = L.tileLayer(...baseLayers[this.basemap])
+                this.map.addLayer(baseLayer)
+                next.push({id: this.basemap, label: this.basemap, layer: baseLayer})
+            }
+
+            for (let [layerId, layerDef] of Object.entries(mapDefs)) {
+                const exists = next.find(layer => layer.id === layerId)
+                if (!exists) {
+                    const layer = L.tileLayer(`https://mapwarper.net/maps/tile/${layerDef['mapwarper-id']}/{z}/{x}/{y}.png`)
+                    next.push({id: layerId, label: layerDef.label || layerDef.title, layer})
+                    layer.options.id = layerDef.id
+                    layer.options.label = layerDef.label || layerDef.title
+                    layer.options.type = 'mapwarper'
+                    if (layerDef.active) layer.addTo(this.map)
+                }
+            }
+
+            if (this.controls.layers) this.map.removeControl(this.controls.layers)
+            if (this.controls.opacity) this.map.removeControl(this.controls.opacity)
+
+            if (next.length > 1) {
+                const layers = {}
+                next.slice(1).forEach(layer => layers[layer.label] = layer.layer)
+                this.controls.layers = L.control.layers(
+                    {}, // baseLayers,
+                    layers, 
+                    { collapsed: true } //options
+                ).addTo(this.map)
+                this.controls.opacity = L.control.opacity(layers, { collapsed: true }).addTo(this.map)
+            } 
+            this.tileLayers = next
+        },
         syncGeoJSONLayers() {
-            console.log('syncGeoJSONLayers')
             this.geoJSONLayers.forEach(layer => this.map.removeLayer(layer))
-            this.geoJSONLayers = []
-            Object.values(this.popups).forEach(popup => this.map.closePopup())
+            Object.values(this.popups).forEach(popup => this.map.closePopup(popup))
             if (this.mapDef.data) {
                 this.getGeoJSON(this.mapDef.data)
                 .then(geoJSON => this.addGeoJSONLayer(geoJSON))
             } else {
                 if (this.mapDef.layers) {
-                    const geoJSONUrls = this.mapDef.layers
-                        .filter(item => item.geojson || item.url)
-                        .map(item => item.geojson || item.url)
-                    console.log('geoJSONUrls', geoJSONUrls)
-                    geoJSONUrls.forEach(url => {
-                        this.getGeoJSON(url)
-                        .then(geoJSON => this.addGeoJSONLayer(geoJSON))
+                    const geoJSONLayerDefs = this.mapDef.layers
+                        .filter(layerDef => layerDef.geojson || layerDef.url)
+                        // .map(layerDef => layerDef.geojson || layerDef.url)
+                    geoJSONLayerDefs.forEach(layerDef => {
+                        this.getGeoJSON(layerDef.geojson || layerDef.url)
+                        .then(geoJSON => this.addGeoJSONLayer(geoJSON.layerDef))
                     })
                 }
                 const itemsWithCoords = this.itemsInActiveElements
                     .filter(item => item.coords !== undefined && !(item.geojson && this.preferGeoJSON))
-                if (itemsWithCoords) {
-                    console.log('itemsWithCoords', itemsWithCoords)
+                if (itemsWithCoords.length > 0) {
                     this.addGeoJSONLayer(this.itemsWithCoordsToGeoJSON(itemsWithCoords))
                 }
                 if (this.preferGeoJSON) {
@@ -219,7 +281,6 @@ module.exports = {
                     .forEach(item => {
                         this.getGeoJSON(item.geojson)
                         .then(geoJSON => {
-                            console.log(geoJSON)
                             if (!geoJSON.properties) geoJSON.properties = {}
                             geoJSON.properties.id = item.id || item.qid || item.eid
                             geoJSON.properties.label = item.label
@@ -229,15 +290,11 @@ module.exports = {
                 }
 
             }
-            this.map.eachLayer(layer => {
-                console.log('layer', layer)
-            })
         },
-        addGeoJSONLayer(geoJSON) {
+        addGeoJSONLayer(geoJSON, layerDef) {
             if (!geoJSON.properties) geoJSON.properties = {}
             geoJSON.properties.name = 'name'
-            console.log('addGeoJSONLayer', geoJSON)
-            let geoJSONLayer = this.geoJSONLayer(geoJSON)
+            let geoJSONLayer = this.geoJSONLayer(geoJSON, layerDef)
             if (this.timeDimension) {
                 geoJSONLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
                     timeDimension: this.map.timeDimension,
@@ -250,18 +307,52 @@ module.exports = {
             geoJSONLayer.addTo(this.map)
             this.geoJSONLayers.push(geoJSONLayer)
         },
-        geoJSONLayer(geoJSON) {
+        geoJSONLayer(geoJSON, layerDef) {
+            layerDef = layerDef || {}
             return L.geoJSON(geoJSON, {
                 onEachFeature: (feature, layer) => {
                     this.addEventHandlers(layer)
                 },
                 pointToLayer: (feature, latLng) => {
-                    const marker = L.circleMarker(latLng, {
-                        radius: 4,
-                        fillOpacity: 1                        
-                    })
-                    return marker
+                    const props = feature.properties
+                    if (props['marker-type'] === 'circle') {
+                        return L.circleMarker(latLng, { radius: props.radius || 4 })
+                    } else {
+                        return this.makeMarker(latLng, props)
+                    }
+                },
+                // Style
+                style: function(feature) {
+                    const props = feature.properties
+                    const geometry = feature.geometry.type
+                    for (let [prop, value] of Object.entries(props)) {
+                        if (value === 'null') props[prop] = null
+                    }
+                    const style = {
+                        color: layerDef['stroke'] || props['stroke'] || '#FB683F',
+                        weight: parseFloat(layerDef['stroke-width'] || props['stroke-width'] || (geometry === 'Polygon' || geometry === 'MultiPolygon' ? 0 : 4)),
+                        opacity: parseFloat(layerDef['stroke-opacity'] || props['stroke-opacity'] || 1),                  
+                        fillColor: layerDef['fill'] || props['fill'] || '#32C125',
+                        fillOpacity: parseFloat(layerDef['fill-opacity'] || props['fill-opacity'] || 0.5),
+                    }
+                    return style
                 }
+            })
+        },
+        makeMarker(latlng, props) {
+            const faIcon = iconMap[props['marker-symbol']] || props['marker-symbol'] || 'circle'
+            return L.marker(latlng, {
+                icon: L.icon.fontAwesome({
+                    iconClasses: `fa fa-${faIcon}`, // you _could_ add other icon classes, not tested.
+                    markerColor: props['marker-color'] || props['fill'] || '#2C84CB',
+                    markerFillOpacity: props['opacity'] || 1,
+                    markerStrokeColor: props['stroke'] || props['marker-color']|| props['fill'] || '#2C84CB',
+                    markerStrokeWidth: props['stroke-width'] || 0,
+                    iconColor: props['marker-symbol-color'] || '#FFF',
+                    iconXOffset: props['marker-symbol-xoffset'] || 0,
+                    iconYOffset: props['marker-symbol-yoffset'] || 0,
+                }),
+                id: props.eid
             })
         },
         cachedGeoJSON(url) {
@@ -385,12 +476,10 @@ module.exports = {
             layer.on('mouseout', this.setHoverItemID )
         },
         layersUpdated: _.debounce(function () {
-            /*
-            this.labelsLayer.clearLayers()
-            this.features.map(feature => this.popups[feature.properties.qid]).forEach(popup => {
-                if (!this.labelsLayer.hasLayer(popup)) this.labelsLayer.addLayer(popup)
+            const activeFeatures = new Set(this.features.map(feature => feature.properties.id))
+            Object.keys(this.popups).forEach(id => {
+                if (!activeFeatures.has(id)) this.map.closePopup(this.popups[id])
             })
-            */
             if (this.autoFit) {
                 const coords = this.features.map(feature => feature.geometry.coordinates)
                 this.map.fitBounds(coords.map(lc => [lc[1], lc[0]]), {padding: [50, 50]})
@@ -398,7 +487,6 @@ module.exports = {
             this.features = []
         }, 100),
         setHoverItemID(e) {
-            console.log('setHoverItemID', e)
             this.$emit('hover-id', e.type === 'mouseover'
                 ? e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid
                 : null)
@@ -409,33 +497,25 @@ module.exports = {
     },
     watch: {
         mapDef: {
-            handler: function (mapDef, prior) {
-                console.log('mapDef', mapDef, mapDef.center, mapDef.zoom)
-                if (this.timeDimension) this.createMap(true)
-                this.syncLayers()
-            },
-            immediate: false
-        },
-        itemsInActiveElements: {
-            handler: function (itemsInActiveElements) {
-                console.log('map.watch.itemsInActiveElements',  itemsInActiveElements)
-                /* 
-                if (itemsInActiveElements) {
-                    this.addGeoJSONLayer(this.itemsInActiveElementsToGeoJSON(itemsInActiveElements))
+            handler: function (mapDef) {
+                console.log('mapDef', mapDef)
+                if (this.timeDimension) {
+                    this.addTimeDimension()
+                } else {
+                    this.removeTimeDimension()
                 }
-                */
+                this.syncLayers()
             },
             immediate: false
         },
         selectedItemID: {
             handler: function (itemID) {
-                console.log(`map.watch.selectedItemID=${itemID}`)
+                // console.log(`map.watch.selectedItemID=${itemID}`)
             },
             immediate: true
         },
         hoverItemID: {
             handler: function (itemID, prior) {
-                console.log(`hover" itemID=${itemID} prior=${prior}`)
                 if (this.showLabels) {
                     if (prior) {
                         let popup = document.querySelector(`h1[data-eid="${prior}"]`)
@@ -494,6 +574,31 @@ module.exports = {
     }
     .popup-invert h1 {
         color: white !important;
+    }
+
+    .leaflet-fa-markers {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        text-align: center;
+        margin-left: -15px;
+        margin-top: -50px;
+        width: 160px;
+        height: 50px;
+    }
+
+    .leaflet-fa-markers .marker-icon-svg {
+        position: absolute;
+    }
+
+    .leaflet-fa-markers .feature-icon {
+        position: absolute;
+        font-size: 14px;
+        line-height: 0px;
+        left: 9px;
+        top: 10px;
+        display: inline-block;
     }
 
 </style>
