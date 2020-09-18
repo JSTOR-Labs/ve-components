@@ -5,7 +5,7 @@
     { "name": "siteMobileHeader", "src": "/components/MobileHeader.vue"},
     { "name": "siteFooter", "src": "/components/Footer.vue"},
     { "name": "siteMobileFooter", "src": "/components/MobileFooter.vue"},
-    { "name": "mapViewer", "src": "/components/LeafletTimeDimension.vue", "selectors": ["tag:map"], "icon": "fa-map-marker-alt", "label": "Map"}
+    { "name": "mapViewer", "src": "/components/LeafletTimeDimension.vue", "selectors": ["tag:map"], "icon": "fa-map-marker-alt", "label": "Map"},
     { "name": "imageViewer", "src": "/components/ImageViewer/index.vue", "selectors": ["tag:image"], "icon": "fa-file-image", "label": "Images"},
     { "name": "staticImageViewer", "src": "/components/ImageViewer/StaticImageViewer.vue"},
     { "name": "miradorImageViewer", "src": "/components/ImageViewer/MiradorViewer.vue"},
