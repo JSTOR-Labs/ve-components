@@ -66,11 +66,14 @@ module.exports = {
         map: undefined,
         popups: {},
         labelsLayer: undefined,
-        features: []
+        features: [],
+        geoJSONLayers: []
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
         mapDef() { return this.item },
+        showLabels() { return !this.mapDef['hide-labels'] || this.mapDef['hide-labels'] === 'false' },
+        preferGeoJSON() { return this.mapDef['prefer-geojson'] && this.mapDef['prefer-geojson'] !== 'false' },
         data() { return this.mapDef.data },
         baseLayer() { return this.mapDef.basemap || defaults.baseLayer },
         center() { return this.mapDef.center || defaults.center },
@@ -104,13 +107,14 @@ module.exports = {
             this.syncLayers()
         },
         createMap(reload) {
+            console.log(`createMap: reload=${reload}`)
             if (reload && this.map) {
                 this.map.off()
                 this.map.remove()
                 this.map = undefined
             }
             if (!this.map) {
-                this.labelsLayer = L.layerGroup()
+                // this.labelsLayer = L.layerGroup()
                 this.map = L.map('map', {
                     center: this.center,
                     zoom: this.zoom,
@@ -120,14 +124,18 @@ module.exports = {
                     preferCanvas: false,
                     layers: [
                         L.tileLayer(...baseLayers[this.baseLayer]),
-                        this.labelsLayer
+                        // this.labelsLayer
                     ]
                 })
                 this.map.on('layeradd', e => {
                     if (e.layer.feature) {
                         if (e.layer.feature) {
                             if (e.layer.feature.properties.label) {
-                                this.addPopup(e.layer.feature.properties.qid || e.layer.feature.properties.id, e.layer.feature.properties.label, e.layer.getLatLng())
+                                const featureType = e.layer.feature.geometry.type
+                                const latLng = featureType === 'Polygon' || featureType === 'MultiPolygon' || featureType === 'LineString'
+                                    ? e.layer.getBounds().getCenter()
+                                    : e.layer.getLatLng()
+                                this.addPopup(e.layer.feature.properties.qid || e.layer.feature.properties.id, e.layer.feature.properties.label, latLng)
                             }
                             this.features.push(e.layer.feature)
                             this.layersUpdated()
@@ -175,9 +183,16 @@ module.exports = {
             }
         },
         syncLayers() {
+            console.log('syncLayers')
             this.syncGeoJSONLayers()
+            console.log('flyTo')
+            this.map.flyTo(this.mapDef.center || defaults.center, this.mapDef.zoom || defaults.zoom)
         },
         syncGeoJSONLayers() {
+            console.log('syncGeoJSONLayers')
+            this.geoJSONLayers.forEach(layer => this.map.removeLayer(layer))
+            this.geoJSONLayers = []
+            Object.values(this.popups).forEach(popup => this.map.closePopup())
             if (this.mapDef.data) {
                 this.getGeoJSON(this.mapDef.data)
                 .then(geoJSON => this.addGeoJSONLayer(geoJSON))
@@ -186,18 +201,42 @@ module.exports = {
                     const geoJSONUrls = this.mapDef.layers
                         .filter(item => item.geojson || item.url)
                         .map(item => item.geojson || item.url)
+                    console.log('geoJSONUrls', geoJSONUrls)
                     geoJSONUrls.forEach(url => {
                         this.getGeoJSON(url)
                         .then(geoJSON => this.addGeoJSONLayer(geoJSON))
                     })
                 }
-                if (this.itemsInActiveElements) {
-                    this.addGeoJSONLayer(this.itemsInActiveElementsToGeoJSON(this.itemsInActiveElements))
+                const itemsWithCoords = this.itemsInActiveElements
+                    .filter(item => item.coords !== undefined && !(item.geojson && this.preferGeoJSON))
+                if (itemsWithCoords) {
+                    console.log('itemsWithCoords', itemsWithCoords)
+                    this.addGeoJSONLayer(this.itemsWithCoordsToGeoJSON(itemsWithCoords))
+                }
+                if (this.preferGeoJSON) {
+                    this.itemsInActiveElements
+                    .filter(item => item.geojson)
+                    .forEach(item => {
+                        this.getGeoJSON(item.geojson)
+                        .then(geoJSON => {
+                            console.log(geoJSON)
+                            if (!geoJSON.properties) geoJSON.properties = {}
+                            geoJSON.properties.id = item.id || item.qid || item.eid
+                            geoJSON.properties.label = item.label
+                            this.addGeoJSONLayer(geoJSON)
+                        })
+                    })
                 }
 
             }
+            this.map.eachLayer(layer => {
+                console.log('layer', layer)
+            })
         },
         addGeoJSONLayer(geoJSON) {
+            if (!geoJSON.properties) geoJSON.properties = {}
+            geoJSON.properties.name = 'name'
+            console.log('addGeoJSONLayer', geoJSON)
             let geoJSONLayer = this.geoJSONLayer(geoJSON)
             if (this.timeDimension) {
                 geoJSONLayer = L.timeDimension.layer.geoJson(geoJSONLayer, {
@@ -209,11 +248,12 @@ module.exports = {
                 })
             }
             geoJSONLayer.addTo(this.map)
+            this.geoJSONLayers.push(geoJSONLayer)
         },
         geoJSONLayer(geoJSON) {
             return L.geoJSON(geoJSON, {
                 onEachFeature: (feature, layer) => {
-                    this.addEventHandlers(layer, layer.feature.properties.qid || layer.feature.properties.id)
+                    this.addEventHandlers(layer)
                 },
                 pointToLayer: (feature, latLng) => {
                     const marker = L.circleMarker(latLng, {
@@ -310,7 +350,7 @@ module.exports = {
             })
             return geoJSON
         },
-        itemsInActiveElementsToGeoJSON(items) {
+        itemsWithCoordsToGeoJSON(items) {
             const geoJSON = { type: 'FeatureCollection', features: [] }
             items.filter(item => item.coords)
             .forEach(item => {
@@ -335,11 +375,14 @@ module.exports = {
                 popup.options.id = id
                 this.popups[id] = popup
             }
+            if (this.showLabels) {
+                this.map.openPopup(this.popups[id])
+            }
         },
-        addEventHandlers(layer, itemId) {
-            layer.on('click', () => { this.setSelectedItemID(itemId) })
-            layer.on('mouseover', () => { this.setHoverItemID(itemId) })
-            layer.on('mouseout', () => { this.setHoverItemID() })
+        addEventHandlers(layer) {
+            layer.on('click', this.setSelectedItemID )
+            layer.on('mouseover', this.setHoverItemID )
+            layer.on('mouseout', this.setHoverItemID )
         },
         layersUpdated: _.debounce(function () {
             /*
@@ -354,16 +397,21 @@ module.exports = {
             }
             this.features = []
         }, 100),
-        setHoverItemID(itemID) {
-            this.$emit('hover-id', itemID)
+        setHoverItemID(e) {
+            console.log('setHoverItemID', e)
+            this.$emit('hover-id', e.type === 'mouseover'
+                ? e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid
+                : null)
         },
-        setSelectedItemID(itemID) {
-            this.$emit('selected-id', itemID)
+        setSelectedItemID(e) {
+            this.$emit('selected-id', e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid)
         }
     },
     watch: {
         mapDef: {
-            handler: function () {
+            handler: function (mapDef, prior) {
+                console.log('mapDef', mapDef, mapDef.center, mapDef.zoom)
+                if (this.timeDimension) this.createMap(true)
                 this.syncLayers()
             },
             immediate: false
@@ -371,9 +419,11 @@ module.exports = {
         itemsInActiveElements: {
             handler: function (itemsInActiveElements) {
                 console.log('map.watch.itemsInActiveElements',  itemsInActiveElements)
+                /* 
                 if (itemsInActiveElements) {
                     this.addGeoJSONLayer(this.itemsInActiveElementsToGeoJSON(itemsInActiveElements))
                 }
+                */
             },
             immediate: false
         },
@@ -386,14 +436,23 @@ module.exports = {
         hoverItemID: {
             handler: function (itemID, prior) {
                 console.log(`hover" itemID=${itemID} prior=${prior}`)
-                console.log(this.popups)
-                if (prior) {
-                    this.map.closePopup(this.popups[prior])
+                if (this.showLabels) {
+                    if (prior) {
+                        let popup = document.querySelector(`h1[data-eid="${prior}"]`)
+                        popup = popup.parentElement.parentElement.parentElement                        
+                        popup.childNodes[0].classList.remove('popup-invert')
+                        popup.childNodes[1].childNodes[0].classList.remove('popup-invert')
+                    }
+                    if (itemID) {
+                        let popup = document.querySelector(`h1[data-eid="${itemID}"]`)
+                        popup = popup.parentElement.parentElement.parentElement
+                        popup.childNodes[0].classList.add('popup-invert')
+                        popup.childNodes[1].childNodes[0].classList.add('popup-invert')
+                    }
+                } else {
+                    if (prior) this.map.closePopup(this.popups[prior])
+                    if (itemID) this.map.openPopup(this.popups[itemID])
                 }
-                if (itemID) {
-                    this.map.openPopup(this.popups[itemID])
-                }
-                console.log(`map.watch.hoverItemID=${itemID}`)
             },
             immediate: true
         },
@@ -406,4 +465,35 @@ module.exports = {
         font-size: 1.0rem;
         font-weight: bold;
     }
+
+    .leaflet-popup-content {
+        margin: 5px 8px !important;
+        line-height: 1 !important;
+    }
+
+    .leaflet-popup-content-wrapper {
+        border-radius: 4px !important;
+    }
+
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+        color: black !important;
+        box-shadow: 0 2px 4px rgb(0,0,0,0.5) !important;
+    }
+
+    .leaflet-popup-content-wrapper h1 {
+        max-width: 120px;
+        line-height: 1.2;
+        margin: 0;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: center;
+        display: inherit;
+    }
+    .popup-invert {
+        background-color: #444 !important;
+    }
+    .popup-invert h1 {
+        color: white !important;
+    }
+
 </style>

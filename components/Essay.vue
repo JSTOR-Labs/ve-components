@@ -9,11 +9,13 @@ module.exports = {
   data: () => ({
     paragraphs: {},
     scenes: [],
-    activeElement: undefined
+    activeElement: undefined,
+    spacer: undefined
   }),
   computed: {
     html() { return this.$store.getters.essayHTML },
     debug() { return this.$store.getters.debug },
+    viewportHeight() { return this.$store.getters.height },
     viewportWidth() { return this.$store.getters.width },
     allItems() { return this.$store.getters.items },
     contentStartPos() { return this.$store.getters.contentStartPos },
@@ -43,7 +45,7 @@ module.exports = {
     init() {
       this.linkTaggedItems()
       // this.addFootnotesHover()
-
+      this.addSpacer()
       // Setup ScrollMagic (https://scrollmagic.io/)
       let first
       let prior
@@ -95,6 +97,15 @@ module.exports = {
       })
       this.findContent()
       this.setActiveElements(first)
+    },
+    addSpacer() {
+      // Adds a spacer element that expands and contracts to match the size of the visualizer so
+      // that content at the end of the article is still reachable by scrolling
+      console.log('addSpacer')
+      this.spacer = document.createElement('div')
+      this.spacer.id = 'essay-spacer'
+      this.spacer.style.height = `${this.viewportHeight*.8}px`
+      document.getElementById('essay').appendChild(this.spacer)
     },
     setActiveElements(elemId) {
       if (elemId) {
