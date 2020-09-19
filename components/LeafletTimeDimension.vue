@@ -267,7 +267,7 @@ module.exports = {
                         // .map(layerDef => layerDef.geojson || layerDef.url)
                     geoJSONLayerDefs.forEach(layerDef => {
                         this.getGeoJSON(layerDef.geojson || layerDef.url)
-                        .then(geoJSON => this.addGeoJSONLayer(geoJSON.layerDef))
+                        .then(geoJSON => this.addGeoJSONLayer(geoJSON,layerDef))
                     })
                 }
                 const itemsWithCoords = this.itemsInActiveElements
