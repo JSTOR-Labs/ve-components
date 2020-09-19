@@ -63,6 +63,8 @@ module.exports = {
     props: {
         items: { type: Array, default: () => ([]) },
         itemsInActiveElements: { type: Array, default: () => ([]) },
+        actions: { type: Array, default: () => ([]) },
+        actionSources: { type: Array, default: () => ([]) },
         width: Number,
         height: Number,
         activeElement: String,
@@ -85,7 +87,7 @@ module.exports = {
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
-        mapDef() { return this.item },
+        mapDef() { return this.item.layers ? this.item.layers : {...this.item, ...{layers: []}} },
         showLabels() { return this.mapDef['show-labels'] && this.mapDef['show-labels'] !== 'false' },
         preferGeoJSON() { return this.mapDef['prefer-geojson'] && this.mapDef['prefer-geojson'] !== 'false' },
         data() { return this.mapDef.data },
@@ -495,57 +497,30 @@ module.exports = {
         setSelectedItemID(e) {
             this.$emit('selected-id', e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid)
         },
-        getEventAttrs(elemId, target) {
-            const eventAttrs = []
-            Array.from (document.querySelectorAll(`#${elemId} span`))
-            .forEach(elem => {
-                for (let i = 0; i < elem.attributes.length; i++) {
-                    const attr = elem.attributes.item(i)
-                    if (attr.name.indexOf('data-') === 0) {
-                        const segs = attr.name.split('-').slice(1)
-                        if (segs.length === 3 && segs[1] === target) {
-                            eventAttrs.push({ elem, event: segs[0] })
-                        }
+        handleEssayAction({elem, event, action, value}) {
+            console.log(`handleEssayAction" event=${event} action=${action} value=${value}`)
+            switch(event) {
+                case 'click':
+                    switch(action) {
+                        case 'flyto':
+                            const [lat, lng, zoom] = value.split(',').map(arg => parseFloat(arg))
+                            this.map.flyTo([lat, lng], zoom)
+                            break
+                    }                        
+                    break
+                case 'mouseover':
+                    switch(action) {
+                        case 'flyto':
+                            const [lat, lng, zoom] = value.split(',').map(arg => parseFloat(arg))
+                            this.map.flyTo([lat, lng], zoom)
+                            break
                     }
-                }
-            })
-            return eventAttrs
-        },
-        addEssayHandlers(elemId) {
-            console.log('addEssayHandlers')
-            this.getEventAttrs(elemId, 'map')
-            .forEach(eventAttr => {
-                if (eventAttr.event === 'click') {
-                    eventAttr.elem.classList.add('map-interaction')
-                    eventAttr.elem.addEventListener(eventAttr.event, this.onClick)
-                }
-            })
-        },
-        removeEssayHandlers(elemId) {
-            console.log('removeEssayHandlers')
-            this.getEventAttrs(elemId, 'map')
-            .forEach(eventAttr => {
-                if (eventAttr.event === 'click') {
-                    eventAttr.elem.classList.remove('map-interaction')
-                    eventAttr.elem.removeEventListener(eventAttr.event, this.onClick)
-                }
-            })
-        },
-        onClick(e) {
-            e.stopPropagation()
-            for (let i = 0; i < e.target.attributes.length; i++) {
-                const attr = e.target.attributes.item(i)
-                if (attr.name.indexOf('data-click-') === 0) {
-                    const action = attr.name.split('-')[3]
-                    const value = attr.value
-                    console.log(`onClick action=${action} value=${value}`)
-                    if (action === 'flyto') {
-                        const [lat, lng, zoom] = value.split(',').map(val => parseFloat(val))
-                        this.map.flyTo([lat, lng], zoom)
-                    }
-                }
+                    break
             }
         }
+    },
+    beforeDestroy() {
+        this.actionSources.forEach(elem => elem.classList.remove('map-interaction'))
     },
     watch: {
         mapDef: {
@@ -562,15 +537,26 @@ module.exports = {
         },
         activeElement: {
             handler: function (current, prior) {
-                console.log(`${this.$options.name} activeElement=${current}`)
-                if (prior) this.removeEssayHandlers(prior)
-                this.addEssayHandlers(current)
+                // console.log(`${this.$options.name} activeElement=${current}`)
             },
             immediate: true
         },
         selectedItemID: {
             handler: function (itemID) {
                 // console.log(`map.watch.selectedItemID=${itemID}`)
+            },
+            immediate: true
+        },
+        actions: {
+            handler: function () {
+                this.actions.forEach(action => this.handleEssayAction(action))
+            },
+            immediate: true
+        },
+        actionSources: {
+            handler: function (current, prior) {
+                current.forEach(elem => elem.classList.add('map-interaction'))
+                if (prior) prior.forEach(elem => elem.classList.remove('map-interaction'))
             },
             immediate: true
         },
