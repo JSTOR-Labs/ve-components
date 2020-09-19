@@ -65,6 +65,7 @@ module.exports = {
         itemsInActiveElements: { type: Array, default: () => ([]) },
         width: Number,
         height: Number,
+        activeElement: String,
         hoverItemID: String,
         selectedItemID: String
     },
@@ -493,6 +494,57 @@ module.exports = {
         },
         setSelectedItemID(e) {
             this.$emit('selected-id', e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid)
+        },
+        getEventAttrs(elemId, target) {
+            const eventAttrs = []
+            Array.from (document.querySelectorAll(`#${elemId} span`))
+            .forEach(elem => {
+                for (let i = 0; i < elem.attributes.length; i++) {
+                    const attr = elem.attributes.item(i)
+                    if (attr.name.indexOf('data-') === 0) {
+                        const segs = attr.name.split('-').slice(1)
+                        if (segs.length === 3 && segs[1] === target) {
+                            eventAttrs.push({ elem, event: segs[0] })
+                        }
+                    }
+                }
+            })
+            return eventAttrs
+        },
+        addEssayHandlers(elemId) {
+            console.log('addEssayHandlers')
+            this.getEventAttrs(elemId, 'map')
+            .forEach(eventAttr => {
+                if (eventAttr.event === 'click') {
+                    eventAttr.elem.classList.add('map-interaction')
+                    eventAttr.elem.addEventListener(eventAttr.event, this.onClick)
+                }
+            })
+        },
+        removeEssayHandlers(elemId) {
+            console.log('removeEssayHandlers')
+            this.getEventAttrs(elemId, 'map')
+            .forEach(eventAttr => {
+                if (eventAttr.event === 'click') {
+                    eventAttr.elem.classList.remove('map-interaction')
+                    eventAttr.elem.removeEventListener(eventAttr.event, this.onClick)
+                }
+            })
+        },
+        onClick(e) {
+            e.stopPropagation()
+            for (let i = 0; i < e.target.attributes.length; i++) {
+                const attr = e.target.attributes.item(i)
+                if (attr.name.indexOf('data-click-') === 0) {
+                    const action = attr.name.split('-')[3]
+                    const value = attr.value
+                    console.log(`onClick action=${action} value=${value}`)
+                    if (action === 'flyto') {
+                        const [lat, lng, zoom] = value.split(',').map(val => parseFloat(val))
+                        this.map.flyTo([lat, lng], zoom)
+                    }
+                }
+            }
         }
     },
     watch: {
@@ -507,6 +559,14 @@ module.exports = {
                 this.syncLayers()
             },
             immediate: false
+        },
+        activeElement: {
+            handler: function (current, prior) {
+                console.log(`${this.$options.name} activeElement=${current}`)
+                if (prior) this.removeEssayHandlers(prior)
+                this.addEssayHandlers(current)
+            },
+            immediate: true
         },
         selectedItemID: {
             handler: function (itemID) {
@@ -601,4 +661,12 @@ module.exports = {
         display: inline-block;
     }
 
+    .map-interaction {
+        border-bottom: 2px solid #A9AC00;
+        cursor: pointer;
+        z-index: 10;
+    }
+    .map-interaction:hover {
+        background: #EBECBB !important;
+    }
 </style>
