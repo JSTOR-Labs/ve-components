@@ -90,6 +90,7 @@ module.exports = {
         mapDef() { return this.item.layers ? this.item : {...this.item, ...{layers: []}} },
         showLabels() { return this.mapDef['show-labels'] && this.mapDef['show-labels'] !== 'false' },
         preferGeoJSON() { return this.mapDef['prefer-geojson'] && this.mapDef['prefer-geojson'] !== 'false' },
+        isSelected() { return this.selected === 'mapViewer' },
         data() { return this.mapDef.data },
         basemap() { return this.mapDef.basemap || defaults.basemap },
         center() { return this.mapDef.center || defaults.center },
@@ -140,6 +141,7 @@ module.exports = {
                     fullscreenControl: true,
                     preferCanvas: false
                 })
+                if (this.timeDimension) this.addTimeDimension()
                 this.map.on('layeradd', e => {
                     if (e.layer.feature) {
                         if (e.layer.feature) {
@@ -318,25 +320,25 @@ module.exports = {
                 },
                 pointToLayer: (feature, latLng) => {
                     const props = feature.properties
-                    if (props['marker-type'] === 'circle') {
-                        return L.circleMarker(latLng, { radius: props.radius || 4 })
+                    if (props['marker-type'] === 'circle' || this.mapDef['marker-type'] === 'circle') {
+                        return L.circleMarker(latLng, { radius: this.mapDef['radius'] || props.radius || 4 })
                     } else {
                         return this.makeMarker(latLng, props)
                     }
                 },
                 // Style
-                style: function(feature) {
+                style: (feature) => {
                     const props = feature.properties
                     const geometry = feature.geometry.type
                     for (let [prop, value] of Object.entries(props)) {
                         if (value === 'null') props[prop] = null
                     }
                     const style = {
-                        color: layerDef['stroke'] || props['stroke'] || '#FB683F',
-                        weight: parseFloat(layerDef['stroke-width'] || props['stroke-width'] || (geometry === 'Polygon' || geometry === 'MultiPolygon' ? 0 : 4)),
-                        opacity: parseFloat(layerDef['stroke-opacity'] || props['stroke-opacity'] || 1),                  
-                        fillColor: layerDef['fill'] || props['fill'] || '#32C125',
-                        fillOpacity: parseFloat(layerDef['fill-opacity'] || props['fill-opacity'] || 0.5),
+                        color: this.mapDef['stroke'] || layerDef['stroke'] || props['stroke'] || '#FB683F',
+                        weight: parseFloat(this.mapDef['stroke-width'] || layerDef['stroke-width'] || props['stroke-width'] || (geometry === 'Polygon' || geometry === 'MultiPolygon' ? 0 : 4)),
+                        opacity: parseFloat(this.mapDef['stroke-opacity'] || layerDef['stroke-opacity'] || props['stroke-opacity'] || 1),                  
+                        fillColor: this.mapDef['fill'] || layerDef['fill'] || props['fill'] || '#32C125',
+                        fillOpacity: parseFloat(this.mapDef['fill-opacity'] || layerDef['fill-opacity'] || props['fill-opacity'] || 0.5),
                     }
                     return style
                 }
@@ -538,6 +540,16 @@ module.exports = {
         activeElement: {
             handler: function (current, prior) {
                 // console.log(`${this.$options.name} activeElement=${current}`)
+            },
+            immediate: true
+        },
+        isSelected: {
+            handler: function (isSelected) {
+                if (isSelected) {
+                    this.actionSources.forEach(elem => elem.classList.add('map-interaction'))
+                } else {
+                    this.actionSources.forEach(elem => elem.classList.remove('map-interaction'))
+                }
             },
             immediate: true
         },

@@ -436,9 +436,13 @@ module.exports = {
     },
     selected: {
       handler: function (current, prior) {
-        console.log(`${this.$options.name} selected=${current}`)
+        console.log(`${this.$options.name} selected=${current} prior=${prior}`)
+        if (prior === 'imageViewer') {
+            this.actionSources.forEach(elem => elem.classList.remove('image-interaction'))
+        }
         if (prior && current === 'imageViewer') {
           this.$nextTick(() => {
+            this.actionSources.forEach(elem => elem.classList.add('image-interaction'))
             setTimeout(() => this.goHome(true), 1)
           })
         }
