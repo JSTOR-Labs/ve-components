@@ -407,7 +407,7 @@ module.exports = {
           case 'click':
               switch(action) {
                 case 'zoomto':
-                  this.gotoRegion(value.split('=')[1])
+                  this.gotoRegion(value)
                   break
               }                        
               break

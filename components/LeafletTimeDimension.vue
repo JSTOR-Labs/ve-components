@@ -87,7 +87,7 @@ module.exports = {
     }),
     computed: {
         item() { return this.items.length > 0 ? this.items[0] : {} },
-        mapDef() { return this.item.layers ? this.item.layers : {...this.item, ...{layers: []}} },
+        mapDef() { return this.item.layers ? this.item : {...this.item, ...{layers: []}} },
         showLabels() { return this.mapDef['show-labels'] && this.mapDef['show-labels'] !== 'false' },
         preferGeoJSON() { return this.mapDef['prefer-geojson'] && this.mapDef['prefer-geojson'] !== 'false' },
         data() { return this.mapDef.data },

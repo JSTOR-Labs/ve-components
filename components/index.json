@@ -6,11 +6,7 @@
     { "name": "siteFooter", "src": "/components/Footer.vue"},
     { "name": "siteMobileFooter", "src": "/components/MobileFooter.vue"},
     { "name": "mapViewer", "src": "/components/LeafletTimeDimension.vue", "selectors": ["tag:map"], "icon": "fa-map-marker-alt", "label": "Map"},
-    { "name": "imageViewer", "src": "/components/ImageViewer/index.vue", "selectors": ["tag:image"], "icon": "fa-file-image", "label": "Images"},
-    { "name": "staticImageViewer", "src": "/components/ImageViewer/StaticImageViewer.vue"},
-    { "name": "miradorImageViewer", "src": "/components/ImageViewer/MiradorViewer.vue"},
-    { "name": "openSeadragonViewer", "src": "/components/ImageViewer/OpenSeadragonViewer.vue"},
-    { "name": "imageViewerModal", "src": "/components/ImageViewer/ImageViewerModal.vue"},
+    { "name": "imageViewer", "src": "/components/OpenSeadragonViewer.vue", "selectors": ["tag:image"], "icon": "fa-file-image", "label": "Images"},
     { "name": "videoPlayer", "src": "/components/VideoPlayer.vue", "selectors": ["tag:video"], "icon": "fa-video", "label": "Videos"},
     { "name": "storiiiesViewer", "src": "/components/StoriiiesViewer.vue", "selectors": ["tag:storiiies"], "icon": "fa-book", "label": "Storiiies Viewer"},
     { "name": "plantSpecimenViewer", "src": "/components/PlantSpecimenViewer.vue", "selectors": ["tag:plant-specimen"], "icon": "fa-seedling", "label": "Plant Specimens"},
@@ -18,7 +14,6 @@
     { "name": "d3PlusNetwork", "src": "/components/D3Network.vue", "selectors": ["tag:d3plus-network"], "icon": "fa-chart-network", "label": "Networks"},
     { "name": "d3PlusRingNetwork", "src": "/components/D3PlusRingNetwork.vue", "selectors": ["tag:d3plus-ring-network"], "icon": "fa-chart-network", "label": "Networks"},
     { "name": "visNetwork", "src": "/components/VisNetwork.vue", "selectors": ["tag:vis-network"], "icon": "fa-chart-network", "label": "Networks"},
-    { "name": "timeSelector", "src": "/components/TimeSelector.vue"},
     { "name": "entityInfobox", "src": "/components/EntityInfobox.vue"},
     { "name": "iiifSideBySide", "src": "/components/IIIFSideBySide.vue", "selectors": ["tag:iiif-compare"], "icon": "fa-file-image", "label": "Image compare"}
 ]
