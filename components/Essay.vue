@@ -206,10 +206,7 @@ module.exports = {
     */
     linkTaggedItems() {
       document.querySelectorAll('.tagged').forEach((item) => {
-        item.addEventListener('click', (e) => {
-          const elemId = e.target.attributes['data-eid'].value
-          this.$store.dispatch('setSelectedItemID', elemId)
-        })
+        item.addEventListener('click', itemClickHandler)
       })
     },
     paragraphClickHandler(e) {
