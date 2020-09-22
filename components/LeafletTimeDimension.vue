@@ -146,6 +146,10 @@ module.exports = {
                     preferCanvas: false
                 })
                 if (this.timeDimension) this.addTimeDimension()
+                this.map.on('moveend', e => {
+                    console.log('moveend', e)
+                    console.log(this.map.getBounds().getCenter())
+                })
                 this.map.on('layeradd', e => {
                     if (e.layer.feature) {
                         if (e.layer.feature) {
