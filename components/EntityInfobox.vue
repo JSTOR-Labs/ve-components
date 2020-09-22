@@ -62,7 +62,9 @@ module.exports = {
     },
     getSummaryInfo() {
       console.log('getSummaryInfo', this.eid, this.entity)
-      if (this.entity['summary info'] === undefined && !this.requested.has(this.entity.id)) {
+      if (this.entity['summary info']) {
+        this.entityInfo = this.entity['summary info']
+      } else if (!this.requested.has(this.entity.id)) {
         this.requested.add(this.entity.id)
         this.getEntity()
           .then((updated) => {

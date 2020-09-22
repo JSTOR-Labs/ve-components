@@ -206,7 +206,7 @@ module.exports = {
     */
     linkTaggedItems() {
       document.querySelectorAll('.tagged').forEach((item) => {
-        item.addEventListener('click', itemClickHandler)
+        item.addEventListener('click', this.itemClickHandler)
       })
     },
     paragraphClickHandler(e) {
