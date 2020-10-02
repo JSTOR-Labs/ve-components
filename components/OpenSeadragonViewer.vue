@@ -17,6 +17,9 @@
 /* global OpenSeadragon, _, sjcl */
 
 const annosEndpoint = 'https://annotations.visual-essays.app/ve/'
+// const annosEndpoint = 'http://localhost/annotations/'
+// const annosEndpoint = 'http://visual-essays.app/annotations/'
+
 const dependencies = [
   'https://cdn.jsdelivr.net/npm/openseadragon@2.4/build/openseadragon/openseadragon.min.js',
   'https://recogito.github.io/js/openseadragon-annotorious.min.js',
@@ -73,7 +76,8 @@ module.exports = {
       //return this.currentItem && this.currentItem.sequences[0].canvases[0].otherContent
       //  ? this.currentItem.sequences[0].canvases[0].otherContent[0]['@id'].split('?target=')[1]
       //  : null
-      const imageSourceHash = this.sha256(this.currentItem.sequences[0].canvases[0].images[0].resource['@id'])
+      const imageSourceHash = this.sha256(this.currentItem.sequences[0].canvases[0].images[0].resource['@id']).slice(0,8)
+      // console.log(this.currentItem.sequences[0].canvases[0].images[0].resource['@id'], imageSourceHash)
       return `https://visual-essays.app/${this.acct}/${this.repo}${this.path}/${imageSourceHash}`
     },
     annotations() { const annos = this.currentItem ? this.currentItem.annotations || [] : []; console.log('annotations', annos.length); return annos; },
@@ -244,7 +248,7 @@ module.exports = {
       return fetch(url)
         .then(resp => resp.json())
         .then(data => {
-          const annotations = data.first.items || data.items || []
+          const annotations = data.items || data.first ? data.first.items : []
           this.currentItem = { ...this.currentItem, ...{ annotations } } 
           return this.currentItem.annotations
         })
