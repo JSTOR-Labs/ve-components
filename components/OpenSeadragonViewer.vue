@@ -55,7 +55,7 @@ module.exports = {
     page: 0,
     currentItem: undefined,
     viewer: undefined,
-    imageSize: undefined,
+    imageSize: {x:0,y:0},
     annotator: undefined,
     annotatorEnabled: false,
     annoCursor: 0,
@@ -108,7 +108,6 @@ module.exports = {
       return sjcl.codec.hex.fromBits(sjcl.hash.sha256.hash(s))
     },
     initViewer() {
-      console.log('initViewer')
       if (this.viewer) {
         this.viewer.destroy()
       }
@@ -119,8 +118,10 @@ module.exports = {
           sequenceMode: true,
           showReferenceStrip: true,
           showNavigationControl: true,
-          minZoomImageRatio: 0.2,
-          maxZoomPixelRatio: 5,
+          // minZoomImageRatio: 0.2,
+          // maxZoomPixelRatio: 5,
+          visibilityRatio: 1.0,
+          constrainDuringPan: true,
           // homeFillsViewer: true,
           // degrees: parseInt(this.currentItem.rotate || '0'),
           // animationTime: 100,
@@ -140,8 +141,8 @@ module.exports = {
         this.viewer.addHandler('page', this.newPage)
         this.viewer.addHandler('viewport-change', this.viewportChange)
         this.viewer.world.addHandler('add-item', () => {
-          this.imageSize = this.viewer.world.getItemAt(0).getContentSize()
-          console.log(`width=${this.imageSize.x} height=${this.imageSize.y}`)
+          this.imageSize = this.viewer.world.getItemAt(0).getContentSize() || {x:0 , y:0}
+          // console.log(`imageSize: width=${this.imageSize.x} height=${this.imageSize.y}`)
           // this.positionImage(false, 'add-item')
         })
         // if (this.viewer.referenceStrip.element) this.viewer.referenceStrip.element.style.height= '100px'
@@ -174,13 +175,12 @@ module.exports = {
               : { url: manifest.sequences[0].canvases[0].images[0].resource['@id'] || manifest.metadata.find(md => md.label === 'source').value,
                  type: 'image', buildPyramid: true }
           })
-          console.log('tileSources', tileSources)
           this.viewer.open(tileSources)
         })
     },
     positionImage (immediately, from) {
       immediately = immediately || false
-      console.log('positionImage', from, immediately)
+      // console.log('positionImage', from, immediately)
       if (this.currentItem) {
         this.$nextTick(() => {
           if (this.currentItem.region) {

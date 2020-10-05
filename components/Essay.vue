@@ -1,11 +1,17 @@
 <template>
-  <div ref="essay" id="essay" :class="layout[0] === 'v' ? 'vertical' : 'horizontal'" :style="style" v-html="html"/>
+  <div ref="essay" id="essay" class="essay-default" v-html="html"/>
 </template>
 
 <script>
 
 module.exports = {
   name: 'essay',
+  props: {
+    layout: String,
+    height: Number,
+    width: Number,
+    viewerIsOpen: Boolean
+  },
   data: () => ({
     paragraphs: {},
     scenes: [],
@@ -21,16 +27,11 @@ module.exports = {
     contentStartPos() { return this.$store.getters.contentStartPos },
     // activeElement() { return store.getters.activeElement },
     activeElements() { return this.$store.getters.activeElements },
-    layout() { return this.$store.getters.layout },
+    // layout() { return this.$store.getters.layout },
     isMobile() { return this.$store.getters.isMobile },
     hoverItemID() { return this.$store.getters.hoverItemID },
-    viewerIsOpen() { return this.$store.getters.viewerIsOpen },
-    triggerHook() { return (this.contentStartPos + this.$store.getters.triggerOffset) / this.$store.getters.height },
-    style() {
-      return {
-        padding: `${this.layout[0] === 'h' ? this.isMobile ? 12 : 32 : 0}px`
-      }
-    }
+    // viewerIsOpen() { return this.$store.getters.viewerIsOpen },
+    triggerHook() { return (this.contentStartPos + this.$store.getters.triggerOffset) / this.$store.getters.height }
   },
   mounted() {
     console.log(`${this.$options.name}.mounted`)
@@ -50,50 +51,30 @@ module.exports = {
       let first
       let prior
       Array.from(document.body.querySelectorAll('p')).filter(elem => elem.id).forEach((para) => {
-        if (!first) {
-          first = para.id
-        }
-        para.title = this.elemIdPath(para.id).join(',')
-        const itemsInPara = this.itemsInElements(this.elemIdPath(para.id), this.allItems)
-        let scrollTop = para.offsetTop
-        let elem = para
-        while (elem.parentElement && elem.id !== 'essay') {
-          elem = elem.parentElement
-          scrollTop += elem.offsetTop
-        }
+        if (!first) first = para.id
+        
+        const items = this.itemsInElements(this.elemIdPath(para.id), this.allItems)
+        this.paragraphs[para.id] = { prior, items }
 
-        this.paragraphs[para.id] = {
-          prior, 
-          top: scrollTop,
-          offset: para.offsetTop,
-          items: itemsInPara
-        }
-
-        // console.log(`${para.id} ${itemsInPara.length}`)
-        if (itemsInPara.length > 0) {
+        if (items.length > 0) {
           para.classList.add('has-items')
           para.addEventListener('click', this.paragraphClickHandler)
         }
 
-        // console.log(`${para.id} ${this.paragraphs[para.id].top} ${itemsInPara.length}`)
-        prior = para.id
         const scene = this.$scrollmagic.scene({
           triggerElement: `#${para.id}`,
           triggerHook: this.triggerHook,
         })
-        .on('enter', () => {
-          // console.log(`enter=${para.id}`)
-          this.setActiveElements(para.id)
-        })
-        .on('leave', () => {
-          // console.log(`leave=${this.paragraphs[para.id].prior}`)
-          this.setActiveElements(this.paragraphs[para.id].prior)
-        })
-        if (this.debug) {
-          scene.addIndicators({indent: this.layout === 'vtl' ? this.viewportWidth/2 : 0})
-        }
+        .on('enter', () => this.setActiveElements(para.id) )
+        .on('leave', () => this.setActiveElements(this.paragraphs[para.id].prior) )
+        
+        if (this.debug) 
+        scene.addIndicators({indent: this.layout === 'vertical' ? this.viewportWidth/2 : 0})
+        
         this.$scrollmagic.addScene(scene)
-        this.scenes.push(scene)
+        this.scenes.push(scene)        
+        prior = para.id
+
       })
       this.findContent()
       this.setActiveElements(first)
@@ -101,7 +82,6 @@ module.exports = {
     addSpacer() {
       // Adds a spacer element that expands and contracts to match the size of the visualizer so
       // that content at the end of the article is still reachable by scrolling
-      console.log('addSpacer')
       this.spacer = document.createElement('div')
       this.spacer.id = 'essay-spacer'
       this.spacer.style.height = `${this.viewportHeight*.8}px`
@@ -111,43 +91,27 @@ module.exports = {
       if (elemId) {
         const newActiveElements = this.elemIdPath(elemId)
         if (newActiveElements.length > 0 && !this.eqSet(new Set(this.activeElements), new Set(newActiveElements))) {
-          if (document.getElementById('triangle')) {
-            document.getElementById('triangle').remove();
-          }
           this.$store.dispatch('setActiveElements', newActiveElements)
-
-          if (this.layout === 'vtl') {
-            //attach triangular shadow
-            let tri = document.createElement("div");
-            tri.setAttribute("id", "triangle");
-            document.getElementById(newActiveElements[0]).append(tri)
-
-            //move tab controls to active paragraph
-            let ctrlTabs = document.querySelectorAll('[role="tablist"]');
-            if (ctrlTabs && ctrlTabs.length > 0) {
-              document.getElementById(newActiveElements[0]).append(ctrlTabs[0])
-            }
-            //this.setActiveElements(this.paragraphs[para.id].prior)
-
-            //console.log(this.paragraphs.size)
-            const contentParaIDs = Object.keys(this.paragraphs).filter(pid => pid.indexOf('section-') === 0)
-            const idx = contentParaIDs.indexOf(newActiveElements[0])
-            this.$store.dispatch('setProgress', Math.round(((idx+1)/contentParaIDs.length)*100))
-          }
+          const contentParaIDs = Object.keys(this.paragraphs).filter(pid => pid.indexOf('section-') === 0)
+          const idx = contentParaIDs.indexOf(newActiveElements[0])
+          this.$store.dispatch('setProgress', Math.round(((idx+1)/contentParaIDs.length)*100))
         }
       }
     },
-    getParagraphs(elem) {
+    getParagraphs(elem, headerSize) {
+      headerSize = headerSize || 0
       const paragraphs = []
       if (elem) {
         Array.prototype.slice.call(elem.getElementsByTagName('p')).forEach((para) => {
           if (para.id) {
-            para.title = `${para.id} (${para.offsetTop})`
+            const paraTop = para.offsetTop - headerSize
+            this.paragraphs[para.id].top = paraTop
+            this.paragraphs[para.id].height = para.offsetHeight
+            para.title = `${para.id} (${paraTop})`
             paragraphs.push({
               type: 'paragraph',
               id: para.id,
-              offset: this.paragraphs[para.id].offset,
-              top: this.paragraphs[para.id].top,
+              top: paraTop,
               bottom: para.offsetTop + para.offsetHeight,
               items: this.itemsPartOf(para.id),
             })
@@ -157,7 +121,10 @@ module.exports = {
       return paragraphs
     },
     findContent() {
-      const content = this.getParagraphs(document.getElementById('essay'))
+      const header = document.getElementById('header')
+      const headerSize = header ? header.clientHeight : 0
+      // const content = this.getParagraphs(document.getElementById('essay', headerSize))
+      const content = []
       for (let i = 1; i < 9; i++) {
         document.body.querySelectorAll(`#essay h${i}`).forEach((heading) => {
           const sectionElem = heading.parentElement
@@ -170,7 +137,7 @@ module.exports = {
             top: sectionElem.offsetTop,
             bottom: sectionElem.offsetTop + sectionElem.offsetHeight,
             items: this.itemsPartOf(sectionId),
-            paragraphs: this.getParagraphs(sectionElem)
+            paragraphs: this.getParagraphs(sectionElem, headerSize)
           }
           content.push(section)
         })
@@ -210,21 +177,28 @@ module.exports = {
       })
     },
     paragraphClickHandler(e) {
+      this.$emit('collapse-header')
       const paraId = e.target.tagName === 'P'
         ? e.target.id
         : e.target.parentElement.id
-      console.log(`paragraphClickHandler para=${paraId}`, e)
       this.$store.dispatch('setSelectedParagraphID', paraId)
+
       if (this.paragraphs[paraId]) {
-        let offset = -280
-        let scrollable = document.getElementById('scrollableContent')
-        if (scrollable) {
-          offset = 120
+        let scrollTo
+        const para = this.paragraphs[paraId]
+        if (this.layout === 'horizontal') {
+          // position active paragraph just above viewer pane, if possible
+          const paraBottom = para.top + para.height
+          let triggerOffset = this.height/2 + 40
+          if (this.height/2 > paraBottom) triggerOffset -= this.height/2 - paraBottom
+          this.$store.dispatch('setTriggerOffset', triggerOffset)
+          scrollTo = para.top + para.height - this.height/2
         } else {
-          scrollable = window
+          scrollTo = para.top - 56
         }
-        const scrollTo = this.paragraphs[paraId].top + offset
-        console.log(`top=${this.paragraphs[paraId].top} offset=${offset} scrollto=${scrollTo}`)
+        console.log(`paragraphClickHandler para=${paraId} top=${this.paragraphs[paraId].top} scrollTo=${scrollTo}`)
+        let scrollable = document.getElementById('scrollableContent')
+        if (!scrollable) scrollable = window
         scrollable.scrollTo(0, scrollTo)
       }
 
@@ -258,6 +232,19 @@ module.exports = {
     }
   },
   watch: {
+    layout: {
+      handler () {
+        document.getElementById('scrollableContent').scrollTo(0, 0)
+        this.findContent()
+      },
+      immediate: true
+    },
+    viewerIsOpen: {
+      handler (isOpen) {
+        if (!isOpen) this.$store.dispatch('setTriggerOffset', 300)
+      },
+      immediate: true
+    },
     activeElements: {
       handler (active) {
         this.activeElement = active[0]
@@ -266,39 +253,17 @@ module.exports = {
     },
     activeElement: {
       handler (active, prior) {
-        console.log('Essay.activeElement', active)
-        if (prior) {
-          this.removeItemClickHandlers(prior)
-          document.querySelectorAll('.active-elem').forEach(elem => elem.classList.remove('active-elem'))
-        }
-        if (active) {
-          if (this.viewerIsOpen) {
-            document.getElementById(active).classList.add('active-elem')
-          }
-          this.addItemClickHandlers(active)
-          const tabsBarElem = document.querySelector('.v-tabs-bar')
-          if (tabsBarElem) {
-            tabsBarElem.style.display = 'none'
-            this.$nextTick(() => {
-              const activeParaTop = document.getElementById(this.activeElement).offsetTop
-              console.log(`activeParaTop=${activeParaTop}`)
-              tabsBarElem.style.top = `${activeParaTop}px`
-              tabsBarElem.style.display = 'block'
-            })
-          }
-        }
+        // console.log('Essay.activeElement', active)
+        if (prior) this.removeItemClickHandlers(prior)
+        if (active) this.addItemClickHandlers(active)
       },
       immediate: true
     },
     hoverItemID: {
       handler: function (itemID, prior) {
         // console.log(`Essay.hoverItemID: value=${itemID} prior=${prior}`)
-        if (itemID) {
-          document.querySelectorAll(`.active-elem [data-eid="${itemID}"]`).forEach(elem => elem.classList.add('entity-highlight'))
-        }
-        if (prior) {
-          document.querySelectorAll(`.active-elem [data-eid="${prior}"]`).forEach(elem => elem.classList.remove('entity-highlight'))
-        }
+        if (itemID) document.querySelectorAll(`.active-elem [data-eid="${itemID}"]`).forEach(elem => elem.classList.add('entity-highlight'))
+        if (prior) document.querySelectorAll(`.active-elem [data-eid="${prior}"]`).forEach(elem => elem.classList.remove('entity-highlight'))
       },
       immediate: true
     },
@@ -316,48 +281,109 @@ module.exports = {
 
 <style>
 
- #essay.vertical h1, .vtl #essay h2, .vtl #essay h3, .vtl #essay h4, .vtl #essay h5, .vtl #essay h6 {
-    padding-left: 32px;
+.essay-default {
+  background-color: #eaeaea;
+}
+
+.vertical .essay-default {
+  padding: 0 0 0 0 !important;
+  margin-right: 4px;
+  box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.3);
+}
+
+.essay-default p.active-elem {
+  background-color: #ffffff;
+  border-left: none;
+  box-shadow:  4px 4px 4px 0 rgba(0,0,0,0.25);
+  position: relative;
+  cursor: default;
+}
+
+.essay-default p.has-items:hover {
+  cursor: pointer !important;
+  background-color: #f7f7f7;;
+}
+  
+.essay-default p {
+  margin-left: 9px;
+  padding-left: 19px;
+  padding-right: 28px;
+  line-height: 1.6;
+}
+
+.vertical p {
+  margin-right: 9px;
+}
+
+.horizontal p {
+  margin-right: 9px;
+}
+
+.essay-default h1,
+.essay-default h2,
+.essay-default h3, 
+.essay-default h4, 
+.essay-default h5,
+.essay-default h6 {
+  margin-left: 24px;
+}
+
+/*
+
+#visual-essay #essay p.active-elem {
+  background-color: #ffffff;
+  border-left: none;
+  box-shadow:  4px 4px 4px 0 rgba(0,0,0,0.25);
+  position: relative;
+  cursor: default;
+}
+
+#visual-essay #essay p.has-items:hover {
+  cursor: pointer !important;
+  background-color: #f7f7f7;;
+}
+*/
+
+/*
+#visual-essay.vertical #essay {
+    background-color: #eaeaea;
+    padding: 0 9px 0 0 !important;
+    box-shadow: 5px 5px 10px 0px rgba(0,0,0,0.16);
+    font-family: Roboto, sans-serif;
+    font-size: 1.3rem;
   }
 
-  #essay.vertical p {
-    padding: 6px 6px 0 6px;
-    /* border-left: 12px solid white; */
-    font-size: 1em;
-    line-height: 1.8;
-    z-index: 1;
+  #visual-essay.vertical #essay section {
+  }
+
+  #visual-essay.vertical #essay section p {
+    margin-left: 9px;
+    padding-left: 19px;
+    padding-right: 28px;
+    line-height: 1.6;
+  }
+
+ #visual-essay.vertical #essay h1,
+ #visual-essay.vertical #essay h2,
+ #visual-essay.vertical #essay h3, 
+ #visual-essay.vertical #essay h4, 
+ #visual-essay.vertical #essay h5 {
+    margin-left: 24px;
+  }
+
+  #visual-essay.vertical #essay p.active-elem {
+    background-color: #ffffff;
+    border-left: none;
+    box-shadow:  4px 4px 4px 0 rgba(0,0,0,0.25);
+    position: relative;
     cursor: default;
   }
-
-  .vtl #essay p, .vtl #essay ol, .vtl #essay ul {
-    padding-right: 32px;
-    border-left: none;
-    font-size: 1.4rem;
-    /* margin-bottom: 2.5em; */
-    padding-left: 32px;
-  }
-
-  .vtl #essay ol, .vtl #essay ul {
-    margin: -10px 0 0 32px;
-  }
-
-  #essay p.active-elem {
-    /* border-left: 40px solid #1D5BC2; */
-    background-color: #ffffff;
-    box-shadow:  4px 4px 4px 0 rgba(0,0,0,0.25)
-  }
-
-  .vtl #essay p.active-elem {
-    border-left: none;
-    width: calc(100% + 20px);
-    /* width: calc(50vw + 40px); */
-    padding-right: 52px
-  }
   
-  p.has-items:hover {
+  #visual-essay.vertical #essay p.has-items:hover {
     cursor: pointer !important;
     background-color: #f7f7f7;;
   }
+*/
 
   .tagged.location,
   p.active-elem .inferred.location,
@@ -402,21 +428,6 @@ module.exports = {
   .tagged.event:hover,
   p.active-elem .inferred.event:hover {
     background: #EBECBB !important;
-  }
-
-  #triangle {
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 20px 20px 0 0;
-    border-color: #666666 transparent transparent transparent;
-    position: absolute;
-    right: -20px;
-    /* bottom: -20px; */
-  }
-
-  section {
-    position: relative
   }
 
 </style>
