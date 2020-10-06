@@ -99,7 +99,7 @@
   }
 </script>
 
-<style scoped>
+<style>
 
   [v-cloak] { display: none; }
 
