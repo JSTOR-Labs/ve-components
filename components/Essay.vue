@@ -213,7 +213,7 @@ module.exports = {
     },
     addItemClickHandlers(elemId) {
       // console.log(`addItemClickHandlers: elemId=${elemId}`, document.getElementById(elemId))
-      document.getElementById(elemId).querySelectorAll('.active-elem .inferred, .active-elem .tagged').forEach((entity) => {
+      document.getElementById(elemId).querySelectorAll('.inferred, .tagged').forEach((entity) => {
         entity.addEventListener('click', this.itemClickHandler)
         entity.addEventListener('mouseover', this.setHoverItemID)
         entity.addEventListener('mouseout', this.setHoverItemID)

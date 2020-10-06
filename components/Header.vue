@@ -15,6 +15,7 @@
           <li @click="collapseHeader">Collapse header</li>
           <li @click="toggleOption('header')">Toggle header</li>
           <li @click="toggleOption('footer')">Toggle footer</li>
+          <li @click="openInfoboxModal">Open infobox</li>
         </ul>
       </div>
     </nav>
@@ -75,6 +76,10 @@
       editMarkdown(editor) {
         this.closeDrawer()
         this.$emit('edit-markdown', editor)
+      },
+      openInfoboxModal(editor) {
+        this.closeDrawer()
+        this.$emit('open-infobox-modal')
       },
       login(editor) {
         this.closeDrawer()
