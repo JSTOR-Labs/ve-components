@@ -117,6 +117,9 @@
     background-position: center center;
     background-size: cover;
     position: relative;
+    margin: 0;
+    background-color: white;
+    color: #444;
   }
 
   .title-bar {
