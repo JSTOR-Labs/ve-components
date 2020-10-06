@@ -103,6 +103,12 @@
 
   [v-cloak] { display: none; }
 
+  body {
+    margin: 0;
+    background-color: white;
+    color: #444;
+  }
+
   .header {
     font-family: Roboto, sans-serif;
     font-size: 1rem;

@@ -1,6 +1,6 @@
 [
-    { "name": "essay", "src": "/components/Essay.vue"},
-    { "name": "essayIndex", "src": "/components/EssayIndex.vue"},
+    { "name": "essay", "src": "/components/Essay.vue", "type": "essay", "layouts": ["vertical", "horizontal"]},
+    { "name": "essayIndex", "src": "/components/EssayIndex.vue", "type": "essay", "layouts": ["index"]},
     { "name": "siteHeader", "src": "/components/Header.vue"},
     { "name": "siteMobileHeader", "src": "/components/MobileHeader.vue"},
     { "name": "siteFooter", "src": "/components/Footer.vue"},

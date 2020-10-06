@@ -7,6 +7,7 @@
 module.exports = {
   name: 'essay',
   props: {
+    html: String,
     layout: String,
     height: Number,
     width: Number,
@@ -19,7 +20,6 @@ module.exports = {
     spacer: undefined
   }),
   computed: {
-    html() { return this.$store.getters.essayHTML },
     debug() { return this.$store.getters.debug },
     viewportHeight() { return this.$store.getters.height },
     viewportWidth() { return this.$store.getters.width },
