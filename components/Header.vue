@@ -19,7 +19,10 @@
         </ul>
       </div>
     </nav>
-    <div class="toolbar-title">{{title || 'Title'}}</div>
+    <div class="title-bar">
+      <div class="title" v-html="title"></div>
+      <div class="author" v-html="author"></div>
+    </div>
   </div>
 </template>
 
@@ -30,7 +33,7 @@
       siteConfig: { type: Object, default: function(){ return {}} },
       progress: { type: Number, default: 0 },
       height: Number,
-      banner: String,
+      // banner: String,
       nav: { type: Array, default: function(){ return []} },
       appVersion: { type: String },
       libVersion: { type: String }
@@ -39,8 +42,8 @@
     }),
     computed: {
       essayConfigLoaded() { return this.essayConfig !== null },
-      // banner() { return this.essayConfigLoaded ? (this.essayConfig.banner || this.siteConfig.banner) : null },
-      // bannerHeight() { return this.essayConfig && this.essayConfig.bannerHeight || this.siteConfig.bannerHeight || 400 },
+      banner() { return this.essayConfigLoaded ? (this.essayConfig.banner || this.siteConfig.banner) : null },
+      bannerHeight() { return this.essayConfig && this.essayConfig.bannerHeight || this.siteConfig.bannerHeight || 400 },
       title() { return this.essayConfigLoaded ? (this.essayConfig.title || this.siteConfig.title) : null },
       author() { return (this.essayConfigLoaded && this.essayConfig.author) || '&nbsp;' },
       numMaps() { return (this.essayConfigLoaded && this.essayConfig['num-maps']) },
@@ -50,7 +53,7 @@
       hasStats() { return this.numMaps || this.numImages || this.numSpecimens || this.numPrimarySources }
     },
     mounted() {
-      console.log(`Header.mounted: height=${this.height} banner=${this.banner}`)
+      console.log(`Header.mounted: height=${this.height}`, this.siteConfig, this.essayConfig)
       this.$refs.header.style.height = `${this.height}px`
     },
     methods: {
@@ -101,14 +104,46 @@
   [v-cloak] { display: none; }
 
   .header {
-    grid-area: header;
+    font-family: Roboto, sans-serif;
+    font-size: 1rem;
     min-height: 104px;
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
     position: relative;
   }
-    
+
+  .title-bar {
+    display: grid;
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    grid-template-areas: 
+      "title"
+      "author";
+    color: white;
+    background-color: rgba(0, 0, 0, .6);
+    padding: 24px 0 0 70px;
+    position: absolute;
+    top: calc(100% - 128px);
+    height: 104px;
+    width: 100%;
+    font-weight: bold;    
+  }
+
+  .title {
+    grid: title;
+    font-size: 2em;
+    margin: 0;
+    padding: 22px 0 0 0;
+  }
+  .author {
+    grid: author;
+    font-size: 1.3em;
+    margin: 0;
+    padding: 0 0 6px 0;
+  }
+
   #menuToggle a {
     text-decoration: none;
     color: #232323;
@@ -222,18 +257,6 @@
     z-index: 1;
     -webkit-user-select: none;
     user-select: none;
-  }
-
-  .toolbar-title {
-    width: 100%;
-    color: white;
-    background-color: rgba(0, 0, 0, .6);
-    padding: 23px 0 0 70px;
-    position: absolute;
-    top: calc(100% - 127px);
-    min-height: 104px;
-    font-size: 2rem;
-    font-weight: bold;    
   }
 
 </style>
