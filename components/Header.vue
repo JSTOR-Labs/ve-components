@@ -230,7 +230,7 @@
     background-color: rgba(0, 0, 0, .6);
     padding: 23px 0 0 70px;
     position: absolute;
-    top: calc(100% - 104px);
+    top: calc(100% - 127px);
     min-height: 104px;
     font-size: 2rem;
     font-weight: bold;    
