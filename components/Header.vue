@@ -19,6 +19,7 @@
         </ul>
       </div>
     </nav>
+    <div class="toolbar-title">{{title || 'Title'}}</div>
   </div>
 </template>
 
@@ -105,6 +106,7 @@
     background-repeat: no-repeat;
     background-position: center center;
     background-size: cover;
+    position: relative;
   }
     
   #menuToggle a {
@@ -135,9 +137,9 @@
   */
   #menuToggle span {
     display: block;
-    width: 33px;
+    width: 20px;
     height: 4px;
-    margin-bottom: 5px;
+    margin-bottom: 4px;
     position: relative;
     background: #cdcdcd;
     border-radius: 3px;
@@ -215,11 +217,23 @@
   #menuToggle {
     display: block;
     position: relative;
-    top: 50px;
-    left: 50px;
+    top: 30px;
+    left: 30px;
     z-index: 1;
     -webkit-user-select: none;
     user-select: none;
+  }
+
+  .toolbar-title {
+    width: 100%;
+    color: white;
+    background-color: rgba(0, 0, 0, .6);
+    padding: 23px 0 0 70px;
+    position: absolute;
+    top: calc(100% - 104px);
+    min-height: 104px;
+    font-size: 2rem;
+    font-weight: bold;    
   }
 
 </style>
