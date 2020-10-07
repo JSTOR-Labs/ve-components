@@ -1,6 +1,8 @@
 [
-    { "name": "essay", "src": "/components/Essay.vue", "type": "essay", "layouts": ["vertical", "horizontal"]},
-    { "name": "essayIndex", "src": "/components/EssayIndex.vue", "type": "essay", "layouts": ["index"]},
+    { "name": "essay", "src": "/components/Essay.vue", "type": "content", "layouts": ["vertical", "horizontal"]},
+    { "name": "essayIndex", "src": "/components/EssayIndex.vue", "type": "content", "layouts": ["index"]},
+    { "name": "header", "src": "/components/Header.vue", "type": "header", "layouts": ["vertical", "horizontal"]},
+    { "name": "indexHeader", "src": "/components/IndexHeader.vue", "type": "header", "layouts": ["index"]},
     { "name": "siteHeader", "src": "/components/Header.vue"},
     { "name": "siteMobileHeader", "src": "/components/MobileHeader.vue"},
     { "name": "siteFooter", "src": "/components/Footer.vue"},

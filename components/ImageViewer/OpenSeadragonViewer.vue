@@ -401,6 +401,7 @@ module.exports = {
         Array.from (document.querySelectorAll('.a9s-annotationlayer')).forEach(elem => elem.style.display = enabled ? '' : 'none')
       }
     },
+    // eslint-disable-next-line no-unused-vars
     handleEssayAction({elem, event, action, value}) {
       console.log(`handleEssayAction" event=${event} action=${action} value=${value}`)
       switch(event) {

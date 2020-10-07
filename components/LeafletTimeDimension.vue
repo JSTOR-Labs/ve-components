@@ -507,20 +507,23 @@ module.exports = {
         setSelectedItemID(e) {
             this.$emit('selected-id', e.target.feature.properties.id || e.target.feature.properties.qid || e.target.feature.properties.eid)
         },
+        // eslint-disable-next-line no-unused-vars
         handleEssayAction({elem, event, action, value}) {
             console.log(`handleEssayAction" event=${event} action=${action} value=${value}`)
             switch(event) {
                 case 'click':
                     switch(action) {
                         case 'flyto':
+                            // eslint-disable-next-line no-case-declarations
                             const [lat, lng, zoom] = value.split(',').map(arg => parseFloat(arg))
                             this.map.flyTo([lat, lng], zoom)
                             break
                     }                        
                     break
                 case 'mouseover':
-                    switch(action) {
-                        case 'flyto':
+                    switch(action) { 
+                        case 'flyto': 
+                            // eslint-disable-next-line no-case-declarations
                             const [lat, lng, zoom] = value.split(',').map(arg => parseFloat(arg))
                             this.map.flyTo([lat, lng], zoom)
                             break
@@ -546,7 +549,7 @@ module.exports = {
             immediate: false
         },
         activeElement: {
-            handler: function (current, prior) {
+            handler: function () {
                 // console.log(`${this.$options.name} activeElement=${current}`)
             },
             immediate: true
@@ -562,7 +565,7 @@ module.exports = {
             immediate: true
         },
         selectedItemID: {
-            handler: function (itemID) {
+            handler: function () {
                 // console.log(`map.watch.selectedItemID=${itemID}`)
             },
             immediate: true

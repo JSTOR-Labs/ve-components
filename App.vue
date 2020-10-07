@@ -1,5 +1,5 @@
 <template>
-    <v-app>
+    <div>
         <div id="menu" ref="menu">
             <ul>
                 <li v-for="(item, componentName) in configs" :key="componentName" @click="component=componentName">{{componentName}}</li>
@@ -16,7 +16,7 @@
                 @selected-id="selectedItemID = $event"
             />
         </div>
-    </v-app>
+    </div>
 </template>
 
 <script>
